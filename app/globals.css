@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* CivicRide semantic tokens — single source of truth (see docs/06-design-system.md).
+   Raw hex never appears in components; status is never color-only.
+
+   Brand + accent are sampled directly from CivicRideLogo.png:
+     navy  gradient  #014B9A -> #023C84 -> #002A66  (shield field)
+     crimson         #CE1824                         ("Ride" wordmark + road swooshes)
+   Every text pairing below is contrast-verified (WCAG 2.1 relative luminance). */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand navy — from the shield. 600+ carry white text (>= 10:1). */
+  --color-brand-50: #F1F6FC;
+  --color-brand-100: #E0EAF6;
+  --color-brand-200: #C0D5EC;
+  --color-brand-300: #8FB4DA;
+  --color-brand-400: #4A88C2;
+  --color-brand-500: #014B9A;
+  --color-brand-600: #023C84;
+  --color-brand-700: #023471;
+  --color-brand-800: #022A5F;
+  --color-brand-900: #002246;
+
+  /* Accent crimson — the "Ride" wordmark. 600+ carry white text (>= 5.5:1). */
+  --color-accent-50: #FEF2F3;
+  --color-accent-100: #FDE3E5;
+  --color-accent-200: #FBC9CD;
+  --color-accent-300: #F79FA6;
+  --color-accent-400: #F1636E;
+  --color-accent-500: #E8232F;
+  --color-accent-600: #CE1824;
+  --color-accent-700: #A8121C;
+  --color-accent-800: #7F0E16;
+  --color-accent-900: #5A0A10;
+
+  --color-ink-900: #0F1B2D;
+  --color-ink-500: #4A5A70;
+  --color-paper: #F5F7FA;
+  --color-card: #FFFFFF;
+  --color-line: #DCE3EC;
+
+  /* Status semantics — six hues so no two lifecycle states read alike.
+     All text-on-tint pairs verified >= 4.5:1. */
+  --color-ok-bg: #E7F6EC;
+  --color-ok-fg: #0F7A3D;
+  --color-warn-bg: #FDF3DC;
+  --color-warn-fg: #8A5A00;
+  --color-bad-bg: #FDE8E9;
+  --color-bad-fg: #B3121D;
+  --color-info-bg: #EDF1F7;
+  --color-info-fg: #37475C;
+  --color-route-bg: #DCF2F9;
+  --color-route-fg: #0A5670;
+  --color-aboard-bg: #EEE9FB;
+  --color-aboard-fg: #57389F;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink-900);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Visible focus everywhere — never removed (a11y priority 1). */
+:focus-visible {
+  outline: 3px solid var(--color-brand-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The shield's own field, extended. Dark surfaces only: the shield artwork is
+   navy, so it never sits on this without a light plate behind it. */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(
+    160deg,
+    var(--color-brand-500) 0%,
+    var(--color-brand-600) 45%,
+    var(--color-brand-900) 100%
+  );
+}
+
+/* Numbers that update live (ETAs, fares) use tabular figures: no layout jitter. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
