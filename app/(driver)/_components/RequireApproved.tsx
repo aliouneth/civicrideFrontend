@@ -1,17 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-declare global {
-  interface Window {
-    __DRIVER_APPROVED__: boolean;
-  }
+// Approval is known server-side (driver layout reads the profile). It flows
+// down through context so the gate below works during server rendering —
+// a `window` global cannot, and would also depend on sibling render order.
+const DriverApprovalContext = createContext<boolean>(false);
+
+export function DriverApprovalProvider({
+  isApproved,
+  children,
+}: {
+  isApproved: boolean;
+  children: React.ReactNode;
+}) {
+  return <DriverApprovalContext.Provider value={isApproved}>{children}</DriverApprovalContext.Provider>;
 }
 
 export function RequireApproved({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const isApproved = window.__DRIVER_APPROVED__ === true;
+  const isApproved = useContext(DriverApprovalContext);
 
   useEffect(() => {
     if (!isApproved) {

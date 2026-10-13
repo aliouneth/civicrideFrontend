@@ -59,6 +59,14 @@ export function RideCardActions({ rideId, statusCode, passengerName }: Props) {
           </Link>
         )}
 
+        {canEdit && (
+          <Link href={`/rides/${rideId}/assign`}>
+            <Button variant="ghost">
+              Assign
+            </Button>
+          </Link>
+        )}
+
         <Link href={`/rides/new?clone=${rideId}`}>
           <Button variant="ghost">Clone</Button>
         </Link>

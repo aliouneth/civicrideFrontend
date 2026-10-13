@@ -5,7 +5,7 @@ import { TabBar } from "@/components/ui/TabBar";
 import type { NavLink } from "@/components/ui/NavLinks";
 import { Logo } from "@/components/ui/Logo";
 import { LogoutButton } from "@/components/ui/LogoutButton";
-import { DriverApprovalScript } from "./_components/DriverApprovalScript";
+import { DriverApprovalProvider } from "./_components/RequireApproved";
 
 export default async function DriverLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -31,8 +31,7 @@ export default async function DriverLayout({ children }: { children: React.React
   const tabs = isApproved ? APPROVED_TABS : PENDING_TABS;
 
   return (
-    <>
-      <DriverApprovalScript isApproved={isApproved} />
+    <DriverApprovalProvider isApproved={isApproved}>
       <div className="mx-auto min-h-dvh max-w-lg bg-paper pb-24">
         <header className="bg-brand-gradient px-4 pb-3 pt-3">
           <div className="flex items-center justify-between gap-3">
@@ -78,6 +77,6 @@ export default async function DriverLayout({ children }: { children: React.React
           <TabBar tabs={tabs} />
         </nav>
       </div>
-    </>
+    </DriverApprovalProvider>
   );
 }

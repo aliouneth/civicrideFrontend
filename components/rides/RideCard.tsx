@@ -31,6 +31,11 @@ export function RideCard({ ride, href, timeZone, hideActions }: {
         <StatusBadge code={ride.status.code} />
       </div>
       <SeriesChip ride={ride} className="mt-2" />
+      {ride.trip_type === "roundtrip" && (
+        <p className="tnum mt-2 text-xs font-semibold text-brand-800">
+          ⇄ Round trip{ride.return_pickup_at ? ` · back ${formatDateTime(ride.return_pickup_at, timeZone)}` : ""}
+        </p>
+      )}
 
       <dl className="mt-3 space-y-1 text-sm">
         <div className="flex gap-2">

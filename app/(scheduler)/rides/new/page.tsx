@@ -20,11 +20,16 @@ interface TenantSettings {
 function cloneDefaults(ride: Ride, timeZone: string): RideDefaults {
   const source = new Date(ride.scheduled_pickup_at);
   const when = source > new Date() ? source : new Date(source.getTime() + 7 * 86_400_000);
+  // A cloned roundtrip keeps its out-and-back gap: shift the return by the
+  // same delta as the pickup. A clone is always a fresh booking (never linked).
+  const delta = when.getTime() - source.getTime();
+  const sourceReturn = ride.return_pickup_at ? new Date(ride.return_pickup_at).getTime() : null;
 
   return {
     passenger_name: ride.passenger_info.name,
     passenger_phone: ride.passenger_info.phone,
-    passengers: ride.passenger_info.passengers ?? 1,
+    additional_riders: ride.passenger_info.additional_riders ?? 0,
+    destination_phone: ride.passenger_info.destination_phone ?? null,
     scheduled_pickup_at: toDatetimeLocal(when.toISOString(), timeZone),
     pickup_address: ride.pickup_address,
     pickup_lat: ride.pickup_lat,
@@ -35,6 +40,10 @@ function cloneDefaults(ride: Ride, timeZone: string): RideDefaults {
     notes: ride.notes,
     wheelchair: ride.passenger_info.wheelchair,
     child_seat: ride.passenger_info.child_seat,
+    trip_type: ride.trip_type,
+    return_pickup_at: sourceReturn !== null
+      ? toDatetimeLocal(new Date(sourceReturn + delta).toISOString(), timeZone)
+      : undefined,
   };
 }
 

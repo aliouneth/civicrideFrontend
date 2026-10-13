@@ -150,11 +150,18 @@ export interface Board {
 
 export interface Ride {
   id: number; status: RideStatus;
-  passenger_info: { name: string; phone: string; passengers?: number; wheelchair?: boolean; child_seat?: boolean };
+  passenger_info: { name: string; phone: string; additional_riders?: number | null; destination_phone?: string | null; wheelchair?: boolean; child_seat?: boolean };
   pickup_address: string; pickup_lat: number; pickup_lng: number;
   dropoff_address: string; dropoff_lat: number; dropoff_lng: number;
   scheduled_pickup_at: string; actual_pickup_at: string | null; actual_dropoff_at: string | null;
   priority: number; notes: string | null; price_cents: number | null;
+  trip_type: "one_way" | "roundtrip";
+  return_pickup_at: string | null;
+  return_ride_id: number | null;
+  /** Eager-loaded on GET /rides/:id: the split return leg, if any. */
+  return_ride?: Ride | null;
+  /** Eager-loaded on GET /rides/:id: the outbound ride, when this is a return leg. */
+  outbound_ride?: Ride | null;
   // Present on every occurrence of a recurring series; null for a one-off ride.
   series_key?: string | null;
   series_label?: string | null;

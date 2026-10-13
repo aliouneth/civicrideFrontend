@@ -40,6 +40,18 @@ export default async function AssignPage({ params }: { params: Promise<{ id: str
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <SeriesChip ride={ride} href={`/rides/series/${ride.series_key}`} />
+          {ride.trip_type === "roundtrip" && (
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-800">
+              <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" />
+              Round trip{ride.return_pickup_at ? ` · back ${formatDateTime(ride.return_pickup_at)}` : ""}
+            </span>
+          )}
+          {ride.outbound_ride && (
+            <Link href={`/rides/${ride.outbound_ride.id}/assign`}
+              className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-paper px-2 py-0.5 text-xs font-semibold text-ink-500 hover:underline">
+              ↩ Return leg of ride #{ride.outbound_ride.id}
+            </Link>
+          )}
           <Link href={`/rides/new?clone=${ride.id}`}>
             <Button variant="ghost" className="border-brand-300 bg-brand-50 text-brand-800 hover:bg-brand-100">
               Clone ride
@@ -48,9 +60,22 @@ export default async function AssignPage({ params }: { params: Promise<{ id: str
         </div>
         <Card className="mt-4">
           <dl className="space-y-2 text-sm">
-            <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Passenger</dt><dd>{ride.passenger_info.name} · {ride.passenger_info.phone}</dd></div>
+            <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Passenger</dt><dd>{ride.passenger_info.name} · {ride.passenger_info.phone}{(ride.passenger_info.additional_riders ?? 0) > 0 && ` · +${ride.passenger_info.additional_riders} additional`}</dd></div>
+            {ride.passenger_info.destination_phone && (
+              <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Dest. phone</dt><dd><a href={`tel:${ride.passenger_info.destination_phone}`} className="font-semibold text-brand-700 hover:underline">{ride.passenger_info.destination_phone}</a></dd></div>
+            )}
             <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Pickup</dt><dd>{ride.pickup_address}<br /><span className="tnum text-ink-500">{formatDateTime(ride.scheduled_pickup_at)}</span></dd></div>
             <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Drop-off</dt><dd>{ride.dropoff_address}</dd></div>
+            <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Trip</dt><dd>
+              {ride.trip_type === "roundtrip" ? "Round trip" : "One-way"}
+              {ride.return_ride && (
+                <> · return as <Link href={`/rides/${ride.return_ride.id}/assign`} className="font-semibold text-brand-700 hover:underline">ride #{ride.return_ride.id}</Link>
+                <span className="tnum text-ink-500"> ({formatDateTime(ride.return_ride.scheduled_pickup_at)})</span></>
+              )}
+            </dd></div>
+            {ride.trip_type === "roundtrip" && !ride.return_ride && ride.return_pickup_at && (
+              <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Return</dt><dd className="tnum">{formatDateTime(ride.return_pickup_at)}<span className="text-ink-500"> — same ride, driver runs both directions</span></dd></div>
+            )}
             <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Fare</dt><dd className="tnum">{formatMoney(ride.price_cents)}</dd></div>
             {ride.total_distance_miles != null && (
               <div className="flex gap-2"><dt className="w-24 shrink-0 font-semibold text-ink-500">Distance</dt><dd className="tnum">{ride.total_distance_miles} mi</dd></div>
