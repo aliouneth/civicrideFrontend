@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveApiBase } from "@/lib/api";
 
 // Thin BFF proxy: attaches the httpOnly token + tenant cookie server-side so
 // client components never handle credentials. Forwards status codes as-is.
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1";
 
 async function proxy(request: NextRequest, path: string[]) {
   const store = await cookies();
@@ -25,21 +25,36 @@ async function proxy(request: NextRequest, path: string[]) {
     ? (request.headers.get("x-tenant") ?? store.get("cr_tenant")?.value ?? "")
     : (store.get("cr_tenant")?.value ?? "");
 
-  const url = `${API_BASE}/${path.join("/")}${request.nextUrl.search}`;
+  const url = `${resolveApiBase()}/${path.join("/")}${request.nextUrl.search}`;
   const body = ["GET", "HEAD"].includes(request.method)
     ? undefined
     : await request.arrayBuffer();
 
-  const upstream = await fetch(url, {
-    method: request.method,
-    headers: {
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      "X-Tenant": tenant,
-      ...(body ? { "Content-Type": request.headers.get("content-type") ?? "application/json" } : {}),
-    },
-    body,
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, {
+      method: request.method,
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "X-Tenant": tenant,
+        ...(body ? { "Content-Type": request.headers.get("content-type") ?? "application/json" } : {}),
+      },
+      body,
+    });
+  } catch (err) {
+    // Backend unreachable (wrong host, backend down, Docker DNS miss).
+    // 502 — not a route 404 — plus a server-side log with the target.
+    console.error(`[BFF] upstream unreachable: ${request.method} ${url}`, err);
+    return NextResponse.json(
+      { message: "API backend unreachable. Check API_BASE_INTERNAL / NEXT_PUBLIC_API_BASE." },
+      { status: 502 },
+    );
+  }
+
+  if (!upstream.ok) {
+    console.error(`[BFF] upstream ${upstream.status}: ${request.method} ${url}`);
+  }
 
   const data = await upstream.arrayBuffer();
   return new NextResponse(data, {

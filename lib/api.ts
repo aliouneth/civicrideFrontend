@@ -1,6 +1,32 @@
 // Typed Laravel API client. Server Components pass token+tenant explicitly
 // (from httpOnly cookies); client components use apiFromBrowser() instead.
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1";
+const DEFAULT_API_BASE = "http://localhost:8000/api/v1";
+
+/**
+ * Normalize a configured API base. Tolerates origin-only values
+ * ("https://api.example.com" → "https://api.example.com/api/v1") so a
+ * missing "/api/v1" suffix can never produce Laravel's
+ * "The route auth/login could not be found." 404.
+ */
+export function normalizeApiBase(raw: string | undefined | null): string {
+  const base = (raw ?? "").trim().replace(/\/+$/, "");
+  if (!base) {
+    return DEFAULT_API_BASE;
+  }
+  return /\/api\/v1$/.test(base) ? base : `${base}/api/v1`;
+}
+
+/**
+ * Server-side base URL for Laravel. Prefers the runtime-only
+ * API_BASE_INTERNAL (read live from process.env, so Docker can point the
+ * BFF at http://backend:8000 without rebuilding) and falls back to the
+ * build-time NEXT_PUBLIC_API_BASE.
+ */
+export function resolveApiBase(): string {
+  return normalizeApiBase(
+    process.env.API_BASE_INTERNAL ?? process.env.NEXT_PUBLIC_API_BASE ?? DEFAULT_API_BASE,
+  );
+}
 
 export interface CursorPage<T> {
   data: T[];
@@ -18,7 +44,7 @@ export async function apiFetch<T>(
   path: string,
   opts: { token: string; tenant: string; init?: RequestInit; revalidate?: number } ,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${resolveApiBase()}${path}`, {
     ...opts.init,
     headers: {
       "Content-Type": "application/json",
