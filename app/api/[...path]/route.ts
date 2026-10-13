@@ -7,11 +7,23 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/
 
 async function proxy(request: NextRequest, path: string[]) {
   const store = await cookies();
+  const joined = path.join("/");
+  // Public auth endpoints must work without a session cookie (login/register).
+  // The agency dropdown on the registration page also needs public access.
+  // Everything else still requires the httpOnly cr_token cookie.
+  const isPublicAuth = joined === "auth/login" || joined === "auth/register";
+  const isPublicAgencies = request.method === "GET" && joined === "agencies";
+  const isPublic = isPublicAuth || isPublicAgencies;
   const token = store.get("cr_token")?.value;
-  const tenant = store.get("cr_tenant")?.value ?? "";
-  if (!token) {
+  if (!token && !isPublic) {
     return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
   }
+
+  // For public auth, forward the caller-supplied tenant header (register form,
+  // platform login sends X-Tenant: ""). Authed calls keep using the cookie.
+  const tenant = isPublicAuth
+    ? (request.headers.get("x-tenant") ?? store.get("cr_tenant")?.value ?? "")
+    : (store.get("cr_tenant")?.value ?? "");
 
   const url = `${API_BASE}/${path.join("/")}${request.nextUrl.search}`;
   const body = ["GET", "HEAD"].includes(request.method)
@@ -22,7 +34,7 @@ async function proxy(request: NextRequest, path: string[]) {
     method: request.method,
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       "X-Tenant": tenant,
       ...(body ? { "Content-Type": request.headers.get("content-type") ?? "application/json" } : {}),
     },

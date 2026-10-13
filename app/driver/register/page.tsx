@@ -52,13 +52,13 @@ export default function DriverRegisterPage() {
   useEffect(() => {
     async function fetchAgencies() {
       try {
-        const res = await fetch("/api/v1/agencies?per_page=100", {
+        const res = await fetch("/api/agencies", {
           credentials: "include",
           headers: { "X-Tenant": "" },
         });
         if (!res.ok) throw new Error("Failed to fetch agencies");
         const data = await res.json();
-        setAgencies(data.data ?? []);
+        setAgencies(Array.isArray(data) ? data : (data.data ?? []));
       } catch {
         setError("Could not load agencies.");
       } finally {

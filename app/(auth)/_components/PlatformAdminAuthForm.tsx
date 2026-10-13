@@ -18,8 +18,8 @@ export function PlatformAdminAuthForm({ mode }: { mode: "login" }) {
     const payload = Object.fromEntries(form.entries());
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/auth/${mode}`,
+      // Same-origin BFF proxy — avoids CORS entirely.
+      const res = await fetch(`/api/auth/${mode}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },

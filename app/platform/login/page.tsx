@@ -16,7 +16,8 @@ export default function PlatformAdminLoginPage() {
     const payload = Object.fromEntries(form.entries());
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/login`, {
+      // Same-origin BFF proxy — avoids CORS entirely.
+      const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json", "X-Tenant": "" },
         body: JSON.stringify(payload),

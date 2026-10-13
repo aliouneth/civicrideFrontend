@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 
 declare global {
   interface Window {
@@ -33,20 +34,36 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const turnstileRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  const [agencyQuery, setAgencyQuery] = useState<string>("");
-  const [agencies, setAgencies] = useState<any[]>([]);
-  const [agencyHover, setAgencyHover] = useState(-1);
+  const [agencySlug, setAgencySlug] = useState<string>("");
+  const [agencies, setAgencies] = useState<{ id: number; name: string; slug: string }[]>([]);
+  const [loadingAgencies, setLoadingAgencies] = useState(false);
+  const [agenciesError, setAgenciesError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mode === "register" && agencyQuery.length >= 2) {
-      fetch(`/api/agencies?q=${encodeURIComponent(agencyQuery)}`)
-        .then((res) => res.json())
-        .then((data) => setAgencies(data))
-        .catch(() => setAgencies([]));
-    } else if (agencyQuery.length === 0) {
-      setAgencies([]);
-    }
-  }, [agencyQuery, mode]);
+    if (mode !== "register") return;
+    let cancelled = false;
+    setLoadingAgencies(true);
+    setAgenciesError(null);
+    fetch(`/api/agencies`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Agencies request failed (${res.status})`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : (data.data ?? []);
+        setAgencies(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAgenciesError("Could not load agencies. Please retry.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAgencies(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -94,8 +111,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     setFieldErrors({});
     setFormError(null);
 
-    const formTenant = mode === "register" ? (form.get("tenant") as string).trim() : "";
+    const formTenant = mode === "register" ? agencySlug.trim() : "";
     const payload = Object.fromEntries(form.entries());
+
+    if (mode === "register" && !formTenant) {
+      setFieldErrors({ tenant: ["Please select your agency."] });
+      document.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+      setSaving(false);
+      return;
+    }
 
     if (mode === "register" && !turnstileToken) {
       setFormError("Please complete the security check.");
@@ -104,8 +128,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     }
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/auth/${mode}`,
+      // Same-origin BFF proxy (app/api/[...path]) — avoids CORS entirely.
+      // Server forwards to Laravel with the X-Tenant header.
+      const res = await fetch(`/api/auth/${mode}`,
         {
           method: "POST",
           headers: {
@@ -155,32 +180,21 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <form action={submit} className="space-y-4" noValidate>
       {mode === "register" && (
         <>
-          <Input
+          <Select
             name="tenant"
-            label="Agency code"
-            error={err("tenant")}
-            autoComplete="organization"
-            value={agencyQuery}
-            onChange={(e) => setAgencyQuery(e.target.value)}
-            required />
-          {agencies.length > 0 && (
-            <div className="absolute right-0 w-80 mt-1 rounded-xl border border-layer bg-layer shadow-md z-50 max-h-80 overflow-y-auto">
-              {agencies.map((agency) => {
-                const isHover = agencyHover === agencies.indexOf(agency);
-                return (
-                  <div
-                    key={agency.id}
-                    onMouseOver={() => setAgencyHover(agencies.indexOf(agency))}
-                    onMouseOut={() => setAgencyHover(-1)}
-                    className={`block py-2 px-4 text-sm ${isHover ? "bg-layer-200 text-ink-900" : "text-ink-700 hover:bg-layer-200"}`}
-                  >
-                    <span className="font-medium">{agency.name}</span>
-                    <span className="text-xs text-ink-500">{agency.slug}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+            label="Agency"
+            error={err("tenant") ?? agenciesError ?? undefined}
+            value={agencySlug}
+            onChange={(e) => setAgencySlug(e.target.value)}
+            options={[
+              { value: "", label: loadingAgencies ? "Loading agencies…" : "Select your agency…" },
+              ...agencies.map((agency) => ({
+                value: agency.slug,
+                label: `${agency.name} (${agency.slug})`,
+              })),
+            ]}
+            required
+          />
           <Input name="name" label="Full name" error={err("name")} autoComplete="name" required />
           <Input name="phone" type="tel" label="Phone" error={err("phone")}
             hint="For dispatch SMS, e.g. +1 555 010 2030." autoComplete="tel" />
