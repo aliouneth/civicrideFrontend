@@ -62,6 +62,7 @@ export default async function SchedulerDashboard({
 
   const query = new URLSearchParams({
     by: grouping,
+    include_distance: "0",
     ...(hasDateRange
       ? { ...(startDate ? { start_date: startDate } : {}), ...(endDate ? { end_date: endDate } : {}) }
       : { days: String(days), past_days: String(pastDays) }),
