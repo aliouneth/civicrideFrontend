@@ -54,8 +54,6 @@ async function DriverDashboardContent({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Jobs</h1>
-
       {!hasWork ? (
         <div className="mt-4">
           <EmptyState
