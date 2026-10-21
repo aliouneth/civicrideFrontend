@@ -44,13 +44,17 @@ export async function apiFetch<T>(
   path: string,
   opts: { token: string; tenant: string; init?: RequestInit; revalidate?: number } ,
 ): Promise<T> {
+  // An empty tenant is no claim at all: the API then falls back to the bearer
+  // token, so a driver whose tenant cookie was lost still gets their agency.
+  const tenant = (opts.tenant ?? "").trim();
+
   const res = await fetch(`${resolveApiBase()}${path}`, {
     ...opts.init,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: `Bearer ${opts.token}`,
-      "X-Tenant": opts.tenant,
+      ...(tenant ? { "X-Tenant": tenant } : {}),
       ...(opts.init?.headers ?? {}),
     },
     // Explicit cache semantics (Next.js 16): dynamic ops data defaults to fresh.

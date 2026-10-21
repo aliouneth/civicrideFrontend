@@ -5,6 +5,17 @@ import { resolveApiBase } from "@/lib/api";
 // Thin BFF proxy: attaches the httpOnly token + tenant cookie server-side so
 // client components never handle credentials. Forwards status codes as-is.
 
+/**
+ * The tenant slug to claim upstream.
+ *
+ * An empty result means "no claim": the API then resolves the tenant from the
+ * public host (X-Tenant-Host) or from the bearer token, so a driver whose
+ * tenant cookie was lost still lands in the right agency instead of a 404.
+ */
+function normalizeTenant(value: string | null | undefined): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
 async function proxy(request: NextRequest, path: string[]) {
   const store = await cookies();
   const joined = path.join("/");
@@ -20,10 +31,12 @@ async function proxy(request: NextRequest, path: string[]) {
   }
 
   // For public auth, forward the caller-supplied tenant header (register form,
-  // platform login sends X-Tenant: ""). Authed calls keep using the cookie.
+  // platform login sends X-Tenant: platform). Authed calls keep using the cookie.
+  const cookieTenant = normalizeTenant(store.get("cr_tenant")?.value);
+  const callerTenant = request.headers.get("x-tenant");
   const tenant = isPublicAuth
-    ? (request.headers.get("x-tenant") ?? store.get("cr_tenant")?.value ?? "")
-    : (store.get("cr_tenant")?.value ?? "");
+    ? (callerTenant !== null ? normalizeTenant(callerTenant) : cookieTenant)
+    : cookieTenant;
 
   const url = `${resolveApiBase()}/${path.join("/")}${request.nextUrl.search}`;
   const body = ["GET", "HEAD"].includes(request.method)
@@ -37,7 +50,12 @@ async function proxy(request: NextRequest, path: string[]) {
       headers: {
         Accept: "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "X-Tenant": tenant,
+        // No tenant known: send no claim at all, so the API resolves the tenant
+        // from the public host or the token instead of failing with a 404.
+        ...(tenant ? { "X-Tenant": tenant } : {}),
+        // The API only sees its own hostname: tell it which host the browser
+        // used so agency.civicride.com can be resolved to a tenant.
+        "X-Tenant-Host": request.headers.get("host") ?? "",
         ...(body ? { "Content-Type": request.headers.get("content-type") ?? "application/json" } : {}),
       },
       body,

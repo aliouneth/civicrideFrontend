@@ -19,7 +19,7 @@ export default function PlatformAdminLoginPage() {
       // Same-origin BFF proxy — avoids CORS entirely.
       const res = await fetch(`/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "X-Tenant": "" },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-Tenant": "platform" },
         body: JSON.stringify(payload),
       });
       const body = await res.json();
@@ -30,7 +30,7 @@ export default function PlatformAdminLoginPage() {
       await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: body.token, tenant: "" }),
+        body: JSON.stringify({ token: body.token, tenant: "platform" }),
       });
       window.location.href = "/platform/dashboard";
     } catch {

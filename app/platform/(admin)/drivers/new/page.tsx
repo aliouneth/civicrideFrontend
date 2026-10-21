@@ -52,7 +52,7 @@ export default function NewDriverPage() {
           "/api/v1/agencies?per_page=100",
           {
             credentials: "include",
-            headers: { "X-Tenant": "" },
+            headers: { "X-Tenant": "platform" },
           }
         );
         if (!res.ok) throw new Error("Failed to fetch agencies");
@@ -81,7 +81,7 @@ export default function NewDriverPage() {
       await fetch("/api/v1/drivers", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", "X-Tenant": "" },
+        headers: { "Content-Type": "application/json", "X-Tenant": "platform" },
         body: JSON.stringify(form),
       });
       setError(null);

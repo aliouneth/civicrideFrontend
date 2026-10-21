@@ -49,7 +49,7 @@ export default function PlatformDriversPage() {
         `/api/v1/drivers?search=${encodeURIComponent(search)}&page=${pageNum}`,
         {
           credentials: "include",
-          headers: { "X-Tenant": "" },
+          headers: { "X-Tenant": "platform" },
         }
       );
       if (!res.ok) {
@@ -84,7 +84,7 @@ export default function PlatformDriversPage() {
         {
           method: "DELETE",
           credentials: "include",
-          headers: { "X-Tenant": "" },
+          headers: { "X-Tenant": "platform" },
         }
       );
       setError(null);
@@ -118,7 +118,7 @@ export default function PlatformDriversPage() {
         {
           method,
           credentials: "include",
-          headers: { "Content-Type": "application/json", "X-Tenant": "" },
+          headers: { "Content-Type": "application/json", "X-Tenant": "platform" },
           body: JSON.stringify({
             home_address: editingDriver.home_address,
             home_lat: editingDriver.home_lat,
