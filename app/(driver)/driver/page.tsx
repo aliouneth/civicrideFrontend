@@ -73,7 +73,7 @@ async function DriverDashboardContent({
           )}
 
           {todayList.length > 0 && (
-            <section className="mt-6">
+            <section className="mt-2">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Today</h2>
               <div className="mt-2 space-y-3">
                 {todayList.map((ride) => (
