@@ -17,13 +17,13 @@ export function Hero() {
 
           {/* Headline */}
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-ink-900 sm:text-5xl lg:text-6xl leading-tight">
-            Smarter Transit. <span className="text-brand-600">With You Along the Way.</span>
+            Smarter Rides. <span className="text-brand-600">With You Along the Way.</span>
           </h1>
 
           {/* Subheadline */}
           <p className="mt-6 text-lg text-ink-500 max-w-2xl mx-auto sm:text-xl">
             AI-powered routing, real-time analytics, and seamless multi-modal scheduling —
-            making transit efficient, reliable, and sustainable for every community.
+            making rides planning and management more efficient, reliable, and sustainable for every community.
           </p>
 
           {/* CTAs */}

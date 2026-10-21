@@ -7,11 +7,11 @@ import { ContactForm } from "@/components/home/ContactForm";
 import { Footer } from "@/components/home/Footer";
 
 export const metadata = {
-  title: "CivicRide — Smarter Transit. With You Along the Way.",
+    title: "CivicRide — Smarter Rides. With You Along the Way.",
   description:
     "AI-powered routing, real-time analytics, and seamless multi-modal scheduling for modern transit agencies. Start your free trial today.",
   openGraph: {
-    title: "CivicRide — Smarter Transit. With You Along the Way.",
+  title: "CivicRide — Smarter Rides. With You Along the Way.",
     description:
       "AI-powered routing, real-time analytics, and seamless multi-modal scheduling for modern transit agencies.",
     type: "website",

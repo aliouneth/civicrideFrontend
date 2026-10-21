@@ -117,7 +117,7 @@ export function ContactForm() {
             Contact Us
           </span>
           <h2 className="text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">
-            Let&apos;s Build Better Transit Together
+            Let&apos;s Build Better Rides Coordination Together
           </h2>
           <p className="mt-4 text-lg text-ink-500">
             Have questions? Want a demo? Our team responds within 24 hours.
