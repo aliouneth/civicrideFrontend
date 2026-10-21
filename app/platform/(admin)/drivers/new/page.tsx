@@ -49,7 +49,7 @@ export default function NewDriverPage() {
     async function fetchAgencies() {
       try {
         const res = await fetch(
-          "/api/v1/agencies?per_page=100",
+          "/api/agencies?per_page=100",
           {
             credentials: "include",
             headers: { "X-Tenant": "platform" },
@@ -78,7 +78,7 @@ export default function NewDriverPage() {
     setSaving(true);
     setError(null);
     try {
-      await fetch("/api/v1/drivers", {
+      await fetch("/api/drivers", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", "X-Tenant": "platform" },

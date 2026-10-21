@@ -33,36 +33,37 @@ export default async function DriverLayout({ children }: { children: React.React
   return (
     <DriverApprovalProvider isApproved={isApproved}>
       <div className="mx-auto min-h-dvh max-w-lg bg-paper pb-24">
-        <header className="bg-brand-gradient px-4 pb-3 pt-3">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/driver" className="flex items-center gap-2">
-              <Logo variant="mark" height={28} plated priority />
-              <span className="text-lg font-bold tracking-tight text-white">CivicRide</span>
+        <header className="bg-brand-gradient px-4 pt-3 pb-2">
+          <div className="flex items-start justify-between gap-3">
+            <Link href="/driver" className="flex items-center gap-2 pt-1">
+              <Logo variant="mark" height={72} plated priority />
             </Link>
-            <div className="flex items-center gap-2">
-              {isApproved && (
-                <>
-                  <Link
-                    href="/driver"
-                    className="flex min-h-[44px] items-center rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/25"
-                  >
-                    My Rides
-                  </Link>
-                  <Link
-                    href="/driver?available=1"
-                    className="flex min-h-[44px] items-center rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/25"
-                  >
-                    Available Rides
-                  </Link>
-                </>
-              )}
-              <LogoutButton variant="onBrand" className="min-h-[44px] rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/25" />
+            <div className="flex flex-col items-end gap-1 w-full">
+              <div className="flex items-center gap-2 w-full justify-end">
+                {isApproved && (
+                  <>
+                    <Link
+                      href="/driver"
+                      className="flex min-h-[44px] items-center rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/25"
+                    >
+                      My Rides
+                    </Link>
+                    <Link
+                      href="/driver?available=1"
+                      className="flex min-h-[44px] items-center rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/25"
+                    >
+                      Available Rides
+                    </Link>
+                  </>
+                )}
+                <LogoutButton variant="onBrand" className="min-h-[44px] rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/25" />
+              </div>
+              <p className="truncate text-xs font-semibold text-white/80 text-right w-full max-w-xs">
+                Welcome {user.name}
+                {user.driver_profile?.tenant?.name && ` · ${user.driver_profile.tenant.name}`}
+              </p>
             </div>
           </div>
-          <p className="mt-2 truncate text-sm text-white/80">
-            Welcome {user.name}
-            {user.driver_profile?.tenant?.name && ` · ${user.driver_profile.tenant.name}`}
-          </p>
           {!isApproved && (
             <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
               <p className="font-medium">Registration pending approval</p>

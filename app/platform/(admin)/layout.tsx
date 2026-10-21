@@ -9,6 +9,7 @@ const LINKS: NavLink[] = [
   { href: "/platform/dashboard", label: "Dashboard" },
   { href: "/platform/tenants", label: "Agencies/Tenants" },
   { href: "/platform/users", label: "Platform Users" },
+  { href: "/platform/cancellation-reasons", label: "Cancellation Reasons" },
 ];
 
 export default async function PlatformAdminLayout({ children }: { children: React.ReactNode }) {

@@ -2,11 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { Button } from "./Button";
+import type { ReactNode } from "react";
 
 // Confirm step for destructive actions (e.g. Cancel ride). Focus moves into
 // the dialog on open and returns on close; Escape cancels.
-export function Modal({ title, body, confirmLabel, onConfirm, onClose, confirming, cancelLabel = "Keep ride" }: {
-  title: string; body: string; confirmLabel: string;
+export function Modal({ title, body, children, confirmLabel, onConfirm, onClose, confirming, cancelLabel = "Keep ride" }: {
+  title: string; body?: string; children?: ReactNode; confirmLabel: string;
   onConfirm: () => void; onClose: () => void; confirming?: boolean; cancelLabel?: string;
 }) {
   const confirmRef = useRef<HTMLButtonElement>(null);
@@ -26,7 +27,8 @@ export function Modal({ title, body, confirmLabel, onConfirm, onClose, confirmin
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="modal-title" className="text-lg font-semibold">{title}</h2>
-        <p className="mt-2 text-sm text-ink-500">{body}</p>
+        {body && <p className="mt-2 text-sm text-ink-500">{body}</p>}
+        {children}
         <div className="mt-6 flex gap-3">
            <Button variant="ghost" className="flex-1" onClick={onClose}>{cancelLabel}</Button>
           <span className="flex-1 [&>button]:w-full">

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Logo } from "@/components/ui/Logo";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 export default function EditAgencyPage() {
   const params = useParams<{ id: string }>();
@@ -43,10 +44,13 @@ export default function EditAgencyPage() {
     load();
   }, [id]);
 
+  const [saved, setSaved] = useState(false);
+
   async function submit(form: FormData) {
     setSaving(true);
     setError(null);
     setFieldErrors({});
+    setSaved(false);
 
     const supervisorName = (form.get("supervisor_name") as string).trim();
     const supervisorEmail = (form.get("supervisor_email") as string).trim();
@@ -61,6 +65,7 @@ export default function EditAgencyPage() {
       mileage_rate_cents: form.get("mileage_rate_cents") ? Math.round(Number(form.get("mileage_rate_cents")) * 100) : null,
       timezone: form.get("timezone") || undefined,
       currency: form.get("currency") || undefined,
+      allow_driver_self_assignment: form.get("allow_driver_self_assignment") === "on",
       supervisor: {
         name: supervisorName,
         email: supervisorEmail,
@@ -80,7 +85,7 @@ export default function EditAgencyPage() {
         else setError(body.message ?? "Failed to update agency.");
         return;
       }
-      window.location.href = "/platform/dashboard";
+      setSaved(true);
     } catch {
       setError("Network error — check your connection and retry.");
     } finally {
@@ -117,38 +122,66 @@ export default function EditAgencyPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
         <div className="flex items-center gap-3">
           <Logo variant="mark" height={36} priority />
           <div>
-            <h1 className="text-2xl font-bold">Edit agency</h1>
+            <h1 className="text-2xl font-bold text-ink-900">Edit agency</h1>
             <p className="text-sm text-ink-500">{tenant?.slug}</p>
           </div>
         </div>
         <Button variant="ghost" onClick={() => setShowUsers(true)}>Tenant Users</Button>
       </div>
 
-      <form action={submit} className="mt-6 space-y-6" noValidate>
-        <div className="grid gap-x-6 gap-y-4 lg:grid-cols-3">
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Agency details</h2>
+      {error && (
+        <div className="mb-6 p-3 rounded-lg bg-bad-bg text-bad-fg border border-bad-fg/25" role="alert">
+          {error}
+        </div>
+      )}
+
+      <form action={submit} className="space-y-8" noValidate>
+        {/* Agency Details */}
+        <section className="bg-card rounded-xl border border-line p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500 mb-4">Agency details</h2>
+          <div className="grid gap-x-6 gap-y-4 lg:grid-cols-3">
             <Input name="name" label="Agency name" defaultValue={tenant?.name} error={err("name")} required />
             <Input name="slug" label="Slug" hint="Used in the subdomain, e.g. acme." defaultValue={tenant?.slug} error={err("slug")} required />
             <Input name="contact_email" type="email" label="Contact email" defaultValue={tenant?.contact_email} error={err("contact_email")} required />
             <Input name="phone" label="Phone" defaultValue={tenant?.phone ?? ""} error={err("phone")} />
-            <Input name="mileage_rate_cents" label="Mileage rate ($/mile)" type="number" step="0.01" min="0" defaultValue={tenant?.mileage_rate_cents ? (tenant.mileage_rate_cents / 100).toFixed(2) : ""} error={err("mileage_rate_cents")} />
-          </section>
+            <Input
+              name="mileage_rate_cents"
+              label="Mileage rate ($/mile)"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={tenant?.mileage_rate_cents ? (tenant.mileage_rate_cents / 100).toFixed(2) : ""}
+              error={err("mileage_rate_cents")}
+            />
+          </div>
+        </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Supervisor</h2>
+        {/* Supervisor */}
+        <section className="bg-card rounded-xl border border-line p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500 mb-4">Supervisor</h2>
+          <div className="grid gap-x-6 gap-y-4 lg:grid-cols-3">
             <Input name="supervisor_name" label="Supervisor name" defaultValue={supervisor?.name} error={err("supervisor.name")} required />
             <Input name="supervisor_email" type="email" label="Supervisor email" defaultValue={supervisor?.email} error={err("supervisor.email")} required />
-            <Input name="supervisor_password" type="password" label="Supervisor password" hint="Leave blank to keep the current one (min. 10 chars if changing)." error={err("supervisor.password")} />
+            <Input
+              name="supervisor_password"
+              type="password"
+              label="Supervisor password"
+              hint="Leave blank to keep the current one (min. 10 chars if changing)."
+              error={err("supervisor.password")}
+            />
             <Input name="supervisor_password_confirmation" type="password" label="Confirm password" />
-          </section>
+          </div>
+        </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Settings</h2>
+        {/* Settings */}
+        <section className="bg-card rounded-xl border border-line p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500 mb-4">Settings</h2>
+          <div className="grid gap-x-6 gap-y-4 lg:grid-cols-3">
             <Select
               name="timezone"
               label="Timezone"
@@ -161,23 +194,42 @@ export default function EditAgencyPage() {
               defaultValue={tenant?.settings?.currency ?? "USD"}
               options={CURRENCIES}
             />
-          </section>
-        </div>
+            <Checkbox
+              name="allow_driver_self_assignment"
+              label="Allow drivers to self-assign available rides"
+              defaultChecked={tenant?.settings?.allow_driver_self_assignment === true}
+            />
+          </div>
+        </section>
 
-        {error && <p role="alert" className="text-sm font-medium text-bad-fg">{error}</p>}
-        <div className="flex gap-3">
-          <Button type="submit" loading={saving} className="flex-1">Save changes</Button>
-          <Link href="/platform/dashboard" className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-lg border border-line bg-card px-4 py-2 text-base font-semibold hover:bg-paper">Cancel</Link>
+        {/* Actions */}
+        {saved && (
+          <div className="mb-4 p-3 rounded-lg bg-ok-bg text-ok-fg border border-ok-fg/25" role="status">
+            <p className="font-medium">Changes saved successfully.</p>
+          </div>
+        )}
+        {error && !saved && <p role="alert" className="text-sm font-medium text-bad-fg mb-4">{error}</p>}
+        <div className="flex gap-3 pt-2 border-t border-line">
+          {!saved ? (
+            <>
+              <Button type="submit" loading={saving} className="flex-1">Save changes</Button>
+              <Link href="/platform/tenants" className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-lg border border-line bg-card px-4 py-2 text-base font-semibold hover:bg-paper">Cancel</Link>
+            </>
+          ) : (
+            <Link href="/platform/tenants" className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700">
+              Back to agencies list
+            </Link>
+          )}
         </div>
       </form>
 
       {showUsers && (
         <section ref={usersRef} className="mt-10 scroll-mt-6">
-          <h2 className="text-lg font-bold">Tenant Users</h2>
+          <h2 className="text-lg font-bold mb-4">Tenant Users</h2>
           {tenantUsers.length > 0 ? (
-            <div className="mt-4 space-y-2">
+            <div className="bg-card rounded-xl border border-line p-4 space-y-2">
               {tenantUsers.map((u: any) => (
-                <div key={u.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-line pb-2">
+                <div key={u.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-line pb-2 last:border-0">
                   <span className="font-semibold">{u.name}</span>
                   <span className="text-sm text-ink-500">{u.email}</span>
                   {u.role?.name && <span className="text-sm text-ink-500">{u.role.name}</span>}

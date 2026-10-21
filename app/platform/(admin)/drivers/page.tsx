@@ -46,7 +46,7 @@ export default function PlatformDriversPage() {
     setError(null);
     try {
       const res = await fetch(
-        `/api/v1/drivers?search=${encodeURIComponent(search)}&page=${pageNum}`,
+        `/api/drivers?search=${encodeURIComponent(search)}&page=${pageNum}`,
         {
           credentials: "include",
           headers: { "X-Tenant": "platform" },
@@ -80,7 +80,7 @@ export default function PlatformDriversPage() {
     setLoading(true);
     try {
       await fetch(
-        `/api/v1/drivers/${driverId}`,
+        `/api/drivers/${driverId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -114,7 +114,7 @@ export default function PlatformDriversPage() {
     try {
       const method = editingDriver.id ? "PATCH" : "POST";
       await fetch(
-        `/api/v1/drivers${editingDriver.id ? `/${editingDriver.id}` : ""}`,
+        `/api/drivers${editingDriver.id ? `/${editingDriver.id}` : ""}`,
         {
           method,
           credentials: "include",

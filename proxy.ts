@@ -7,11 +7,8 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("cr_token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Root entry: logged-in users go to the board (role routing happens in
-  // layouts), everyone else to login. Edge redirect = no flash, no meta refresh.
-  if (pathname === "/") {
-    return NextResponse.redirect(new URL(token ? "/dashboard" : "/login", request.url));
-  }
+  // Root ("/") is public: app/page.tsx renders the marketing site for
+  // visitors and redirects authenticated users to their role home.
 
   const isAppRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/rides")
     || pathname.startsWith("/drivers") || pathname.startsWith("/reports")
