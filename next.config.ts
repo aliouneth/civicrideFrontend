@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1",
   },
+  // Upgrade policy applied by the security upgrade to 16.4.5: only surface the
+  // upgrade nudge again when a published security advisory affects the install.
+  experimental: {
+    agentUpgrade: "security",
+  },
 };
 
 export default nextConfig;
