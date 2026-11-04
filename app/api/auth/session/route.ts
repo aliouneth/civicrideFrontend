@@ -9,6 +9,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "token is required; tenant may be empty for platform admins." }, { status: 400 });
   }
   const store = await cookies();
+  // 7-day session cookie — deliberately shorter than the 30-day API token
+  // lifetime (config/sanctum.php SANCTUM_EXPIRATION), so the cookie is the
+  // limiting factor for browser sessions.
   const opts = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 24 * 7 };
   store.set("cr_token", token, opts);
   store.set("cr_tenant", tenant, opts);

@@ -69,7 +69,7 @@ export default function NewTenantPage() {
         <Input name="mileage_rate_cents" label="Mileage rate ($/mile)" type="number" step="0.01" min="0" error={err("mileage_rate_cents")} />
         <Input name="supervisor_name" label="Supervisor name" error={err("supervisor.name")} required />
         <Input name="supervisor_email" type="email" label="Supervisor email" error={err("supervisor.email")} required />
-        <Input name="supervisor_password" type="password" label="Supervisor password" hint="Minimum 10 characters." error={err("supervisor.password")} required />
+        <Input name="supervisor_password" type="password" label="Supervisor password" hint="Minimum 10 characters, with letters and numbers." error={err("supervisor.password")} required />
         <Input name="supervisor_password_confirmation" type="password" label="Confirm password" required />
         {formError && <p role="alert" className="text-sm font-medium text-bad-fg">{formError}</p>}
         <Button type="submit" loading={saving} className="w-full">

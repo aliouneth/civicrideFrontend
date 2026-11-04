@@ -211,7 +211,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <Input name="email" type="email" label="Work email" error={err("email")}
             autoComplete="email" required />
           <Input name="password" type="password" label="Password" error={err("password")}
-            hint="Minimum 8 characters." autoComplete="new-password" required />
+            hint="Minimum 10 characters, with letters and numbers." autoComplete="new-password" required />
           <Input name="password_confirmation" type="password" label="Confirm password"
             error={err("password_confirmation")} autoComplete="new-password" required />
           <div ref={turnstileRef} className="flex justify-center" />

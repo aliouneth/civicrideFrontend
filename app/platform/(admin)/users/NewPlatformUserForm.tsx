@@ -50,7 +50,7 @@ export function NewPlatformUserForm() {
       <h2 className="font-semibold">Add platform user</h2>
       <Input name="name" label="Name" error={err("name")} required />
       <Input name="email" type="email" label="Email" error={err("email")} required />
-      <Input name="password" type="password" label="Password" hint="Minimum 10 characters." error={err("password")} required />
+      <Input name="password" type="password" label="Password" hint="Minimum 10 characters, with letters and numbers." error={err("password")} required />
       <Input name="password_confirmation" type="password" label="Confirm password" required />
       {error && <p role="alert" className="text-sm font-medium text-bad-fg">{error}</p>}
       <Button type="submit" loading={saving}>Create user</Button>
