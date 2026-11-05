@@ -12,7 +12,7 @@ export function Hero() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-600 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-600" />
             </span>
-            <span>Now serving 50+ agencies nationwide</span>
+            <span>Our goal is to serve multiple agencies nationwide</span>
           </div>
 
           {/* Headline */}
@@ -54,7 +54,7 @@ export function Hero() {
               </span>
               <div>
                 <p className="text-sm font-semibold text-ink-900">SOC 2 Type II</p>
-                <p className="text-xs text-ink-500">Certified</p>
+                <p className="text-xs text-ink-500">Compliant</p>
               </div>
             </li>
             <li className="flex items-center gap-3 px-5 py-4">

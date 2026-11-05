@@ -393,8 +393,8 @@ export default function PrivacyPage() {
                 contact@civicride.com
               </a>{" "}
               or call{" "}
-              <a href="tel:+18005550199" className="text-brand-600 hover:underline">
-                +1 (800) 555-0199
+              <a href="tel:+19203831918" className="text-brand-600 hover:underline">
+                +1 (920) 383-1918
               </a>
               .
             </p>

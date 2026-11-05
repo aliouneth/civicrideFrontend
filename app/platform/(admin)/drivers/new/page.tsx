@@ -114,7 +114,6 @@ export default function NewDriverPage() {
             step="any"
             label="Latitude"
             defaultValue={form.home_lat}
-            required
           />
           <Input
             name="home_lng"
@@ -122,7 +121,6 @@ export default function NewDriverPage() {
             step="any"
             label="Longitude"
             defaultValue={form.home_lng}
-            required
           />
         </div>
         <Input

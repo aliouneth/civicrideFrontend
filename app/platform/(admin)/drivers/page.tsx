@@ -311,7 +311,6 @@ export default function PlatformDriversPage() {
                     step="any"
                     label="Latitude"
                     defaultValue={editingDriver?.home_lat != null ? String(editingDriver.home_lat) : ""}
-                    required
                   />
                   <Input
                     name="home_lng"
@@ -319,7 +318,6 @@ export default function PlatformDriversPage() {
                     step="any"
                     label="Longitude"
                     defaultValue={editingDriver?.home_lng != null ? String(editingDriver.home_lng) : ""}
-                    required
                   />
                 </div>
                 <Input

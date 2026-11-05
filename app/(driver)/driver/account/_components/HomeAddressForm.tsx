@@ -29,7 +29,7 @@ export function HomeAddressForm({ initial }: { initial: HomeBase }) {
       const res = await fetch("/api/drivers/me/home", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ home_address: address, home_lat: Number(lat), home_lng: Number(lng) }),
+        body: JSON.stringify({ home_address: address, home_lat: lat ? Number(lat) : null, home_lng: lng ? Number(lng) : null }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -54,8 +54,8 @@ export function HomeAddressForm({ initial }: { initial: HomeBase }) {
         required
       />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Latitude" type="number" step="any" value={lat} onChange={(e) => setLat(e.target.value)} required />
-        <Input label="Longitude" type="number" step="any" value={lng} onChange={(e) => setLng(e.target.value)} required />
+        <Input label="Latitude" type="number" step="any" value={lat} onChange={(e) => setLat(e.target.value)} />
+        <Input label="Longitude" type="number" step="any" value={lng} onChange={(e) => setLng(e.target.value)} />
       </div>
       {error && <p role="alert" className="text-sm font-medium text-bad-fg">{error}</p>}
       {saved && <p role="status" className="text-sm font-medium text-brand-700">Home address saved.</p>}

@@ -90,10 +90,10 @@ export function Footer() {
               </a>
               <span className="text-ink-600">|</span>
               <a
-                href="tel:+18005550199"
+                href="tel:+19203831918"
                 className="text-ink-400 hover:text-white transition-colors text-sm"
               >
-                +1 (800) 555-0199
+                +1 (920) 383-1918
               </a>
             </div>
           </div>

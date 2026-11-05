@@ -102,7 +102,6 @@ export function DriverEditForm({ driver }: { driver: DriverDetail }) {
             max={90}
             defaultValue={driver.home_lat != null ? String(driver.home_lat) : ""}
             className="hidden"
-            required
           />
           <Input
             name="home_lng"
@@ -113,7 +112,6 @@ export function DriverEditForm({ driver }: { driver: DriverDetail }) {
             max={180}
             defaultValue={driver.home_lng != null ? String(driver.home_lng) : ""}
             className="hidden"
-            required
           />
         </div>
 

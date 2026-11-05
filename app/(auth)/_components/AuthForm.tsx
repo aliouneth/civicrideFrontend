@@ -198,6 +198,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <Input name="name" label="Full name" error={err("name")} autoComplete="name" required />
           <Input name="phone" type="tel" label="Phone" error={err("phone")}
             hint="For dispatch SMS, e.g. +1 555 010 2030." autoComplete="tel" />
+          <Input name="home_address" label="Home address" error={err("home_address")}
+            autoComplete="street-address" />
           <Input name="license_number" label="License number" error={err("license_number")}
             autoComplete="off" required />
           <Input name="license_expiry" type="date" label="License expiry" error={err("license_expiry")}

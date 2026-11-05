@@ -13,11 +13,6 @@ const features = [
     title: "AI-Driven Routing",
     description:
       "Machine learning algorithms analyze historical ridership, traffic patterns, and real-time conditions to generate optimal routes that adapt to changing demand throughout the day.",
-    metrics: [
-      { label: "Avg. wait time reduction", value: "27%" },
-      { label: "On-time performance", value: "99.2%" },
-      { label: "Miles optimized daily", value: "12,000+" },
-    ],
     gradient: "from-brand-500 to-brand-600",
   },
   {
@@ -30,11 +25,6 @@ const features = [
     title: "Demand-Responsive Scheduling",
     description:
       "Real-time demand signals from mobile apps, fixed stops, and partner APIs feed dynamic scheduling engines that right-size vehicle deployment minute-by-minute.",
-    metrics: [
-      { label: "Empty seat miles cut", value: "41%" },
-      { label: "Dynamic trips/day", value: "3,400+" },
-      { label: "Avg. response time", value: "< 3 min" },
-    ],
     gradient: "from-accent-500 to-accent-600",
   },
   {
@@ -47,11 +37,6 @@ const features = [
     title: "Carbon Footprint Reduction",
     description:
       "Electrification planning tools, route consolidation, and occupancy optimization cut emissions per passenger-mile while maintaining service quality.",
-    metrics: [
-      { label: "CO₂e reduced annually", value: "18,000+ tons" },
-      { label: "EV fleet transitions", value: "12 agencies" },
-      { label: "Passenger-mi efficiency", value: "+34%" },
-    ],
     gradient: "from-ok-fg to-emerald-600",
   },
 ];
@@ -101,17 +86,6 @@ export function Features() {
 
                 <h3 className="text-xl font-bold text-ink-900">{feature.title}</h3>
                 <p className="mt-3 leading-relaxed text-ink-500">{feature.description}</p>
-
-                {/* Metrics pinned to the card footer */}
-                <div className="mt-6 flex-1" aria-hidden="true" />
-                <div className="grid grid-cols-3 gap-4 border-t border-line pt-4">
-                  {feature.metrics.map((metric, mIndex) => (
-                    <div key={mIndex} className="text-center">
-                      <div className="text-2xl font-bold text-ink-900 tnum">{metric.value}</div>
-                      <div className="text-xs text-ink-500 mt-0.5">{metric.label}</div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </article>
           ))}
@@ -126,7 +100,7 @@ export function Features() {
             {[
               { icon: "📊", title: "Real-Time Analytics Dashboard", desc: "Live KPIs, heatmaps, and predictive alerts for dispatchers." },
               { icon: "🔗", title: "Open API & Integrations", desc: "REST/GraphQL APIs, GTFS-Realtime, Trapeze, Ecolane, and more." },
-              { icon: "🚌", title: "Mixed-Fleet Optimization", desc: "Unified scheduling for fixed-route, paratransit, and microtransit." },
+              { icon: "🚌", title: "Mixed-Fleet Optimization", desc: "Unified scheduling for different needs." },
               { icon: "🛡️", title: "Enterprise Security", desc: "SOC 2, HIPAA-ready, SSO/SCIM, and role-based access control." },
             ].map((item, i) => (
               <Card key={i} className="p-6 text-center hover:shadow-md transition-shadow">
