@@ -13,6 +13,8 @@ export function Checkbox({ label, id, className = "", children, ...rest }: Input
         id={fieldId}
         className="h-4 w-4 rounded border-line bg-card text-brand-600 focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
         {...rest}
+        // Form-filler browser extensions add attributes before hydration.
+        suppressHydrationWarning
       />
       {label && <span className="text-sm text-ink-900">{label}</span>}
       {children}

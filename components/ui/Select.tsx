@@ -19,6 +19,10 @@ export function Select({ label, error, options, id, className = "", children, ..
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${fieldId}-error` : undefined}
         className="min-h-[44px] w-full rounded-lg border border-line bg-card px-3 py-2 text-base"
+        // Password-manager / form-filler browser extensions inject attributes
+        // (e.g. fdprocessedid) into form fields before React hydrates, which
+        // would otherwise report a server/client mismatch for this element.
+        suppressHydrationWarning
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
