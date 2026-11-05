@@ -13,7 +13,7 @@ export default function ReportsPage() {
 
       <h2 className="mt-8 text-lg font-semibold">Driver monthly rides</h2>
       <p className="mt-1 text-sm text-ink-500">
-        Pick a driver and month to see every ride they ran, with totals.
+        Pick a driver and month to see every ride they ran, with totals and which trips they have attested.
       </p>
       <div className="mt-3"><DriverRideReport mode="any" /></div>
     </div>

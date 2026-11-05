@@ -20,6 +20,7 @@ interface Report {
     rides: number;
     completed: number;
     cancelled: number;
+    attested?: number;
     fare_cents: number;
     distance_miles: number;
   };
@@ -72,6 +73,7 @@ function RidesTable({ rides }: { rides: Ride[] }) {
             <th className="px-3 py-2">Passenger</th>
             <th className="px-3 py-2">Route</th>
             <th className="px-3 py-2">Status</th>
+            <th className="px-3 py-2">Attested</th>
             <th className="px-3 py-2 text-right">Fare</th>
           </tr>
         </thead>
@@ -94,6 +96,16 @@ function RidesTable({ rides }: { rides: Ride[] }) {
                     {meta.label}
                   </span>
                 </td>
+                <td className="whitespace-nowrap px-3 py-2.5">
+                  {ride.attested_at ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-ok-fg/25 bg-ok-bg px-2 py-0.5 text-xs font-medium text-ok-fg">
+                      <span className="h-1.5 w-1.5 rounded-full bg-ok-fg" />
+                      {formatDateTime(ride.attested_at)}
+                    </span>
+                  ) : (
+                    <span className="text-ink-500">&mdash;</span>
+                  )}
+                </td>
                 <td className="tnum px-3 py-2.5 text-right font-semibold">
                   {formatMoney(ride.price_cents)}
                 </td>
@@ -103,7 +115,7 @@ function RidesTable({ rides }: { rides: Ride[] }) {
         </tbody>
         <tfoot>
           <tr className="border-t border-line bg-ink-50 font-semibold">
-            <td className="px-3 py-2.5" colSpan={4}>
+            <td className="px-3 py-2.5" colSpan={5}>
               Total
             </td>
             <td className="tnum px-3 py-2.5 text-right">
@@ -135,7 +147,6 @@ export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attesting, setAttesting] = useState(false);
-  const [attestedIds, setAttestedIds] = useState<Set<number>>(new Set());
   const [attestMessage, setAttestMessage] = useState<string | null>(null);
 
   async function loadDrivers() {
@@ -175,10 +186,19 @@ export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
         throw new Error(body.message ?? "Attestation failed.");
       }
       const body = (await res.json()) as { attested: number };
-      setAttestedIds((prev) => {
-        const next = new Set(prev);
-        attestable.forEach((r) => next.add(r.id));
-        return next;
+      // Stamp the rides just attested and recount the summary so the fresh
+      // attestations show up without a second round-trip.
+      setReport((prev) => {
+        if (!prev) return prev;
+        const attestableIds = new Set(attestable.map((r) => r.id));
+        const rides = prev.rides.map((ride) =>
+          attestableIds.has(ride.id) && !ride.attested_at ? { ...ride, attested_at: new Date().toISOString() } : ride,
+        );
+        return {
+          ...prev,
+          rides,
+          summary: { ...prev.summary, attested: rides.filter((ride) => ride.attested_at).length },
+        };
       });
       setAttestMessage(`${body.attested} ride(s) attested.`);
     } catch (e) {
@@ -241,10 +261,20 @@ export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
           <p className="text-sm text-ink-500">
             {report.driver.name} — {monthLabel(report.month)}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-5">
+          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <Card><Stat label="Total rides" value={String(report.summary.rides ?? 0)} /></Card>
             <Card><Stat label="Completed" value={String(report.summary.completed ?? 0)} /></Card>
             <Card><Stat label="Cancelled" value={String(report.summary.cancelled ?? 0)} /></Card>
+            <Card>
+              <Stat
+                label="Attested"
+                value={
+                  (report.summary.completed ?? 0) + (report.summary.cancelled ?? 0) === 0
+                    ? "—"
+                    : `${report.summary.attested ?? 0}/${(report.summary.completed ?? 0) + (report.summary.cancelled ?? 0)}`
+                }
+              />
+            </Card>
             <Card><Stat label="Fares" value={formatMoney(report.summary.fare_cents ?? 0)} /></Card>
             <Card><Stat label="Distance" value={`${report.summary.distance_miles ?? 0} mi`} /></Card>
           </div>
