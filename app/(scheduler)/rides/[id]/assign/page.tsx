@@ -31,6 +31,14 @@ export default async function AssignPage({ params }: { params: Promise<{ id: str
     ({ data: [], next_cursor: null, next_page_url: null, prev_cursor: null }),
   );
 
+  // Keep the currently assigned driver selectable even if they fall outside the
+  // first page of the driver list.
+  const assignedDriverId = ride.active_assignment?.driver_profile_id ?? null;
+  if (assignedDriverId && !drivers.data.some((d) => d.id === assignedDriverId)) {
+    const assigned = await apiFetch<DriverRow>(`/drivers/${assignedDriverId}`, session).catch(() => null);
+    if (assigned) drivers.data = [assigned, ...drivers.data];
+  }
+
   return (
     <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-2">
       <div>
@@ -100,6 +108,7 @@ export default async function AssignPage({ params }: { params: Promise<{ id: str
             {["pending", "assigned"].includes(ride.status.code) ? (
               <AssignmentPicker
                 rideId={ride.id}
+                defaultDriverId={assignedDriverId ?? undefined}
                 drivers={drivers.data.map((d) => ({
                   id: d.id, name: d.user?.name ?? `Driver #${d.id}`,
                   activeCount: d.active_assignments_count ?? 0,

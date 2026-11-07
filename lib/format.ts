@@ -14,8 +14,8 @@ export function formatMoney(cents: number | null, currency = "USD"): string {
   }).format(cents / 100);
 }
 
-export function navigationUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+export function navigationUrl(address: string): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 }
 
 /**

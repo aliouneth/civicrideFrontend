@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
 // Client leaf: posts the assignment, surfaces double-booking errors inline.
-export function AssignmentPicker({ rideId, drivers }: {
+export function AssignmentPicker({ rideId, drivers, defaultDriverId }: {
   rideId: number;
   drivers: { id: number; name: string; activeCount: number }[];
+  defaultDriverId?: number;
 }) {
   const router = useRouter();
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(defaultDriverId ? String(defaultDriverId) : "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

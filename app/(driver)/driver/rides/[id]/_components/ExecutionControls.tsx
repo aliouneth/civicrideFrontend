@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
-import { nextDriverActions } from "@/lib/ride-status";
+import { nextDriverActions, previousDriverAction } from "@/lib/ride-status";
 import { apiFetch } from "@/lib/api";
 
 // Driver execution leaf: exactly one primary action per state (Start →
@@ -59,12 +59,25 @@ export function ExecutionControls({
   const actions = nextDriverActions(statusCode).filter(
     (a) => a.to !== "en_route" || canStart,
   );
-  const showCancelButton = ["assigned", "en_route", "picked_up"].includes(statusCode);
+  const backAction = previousDriverAction(statusCode);
+  const showCancelButton = ["assigned", "en_route", "at_pickup", "transporting"].includes(statusCode);
+
+  async function getLocation(): Promise<{ lat?: number; lng?: number }> {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return {};
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve({}),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+      );
+    });
+  }
 
   async function advance(to: string, extra?: { reason?: string }) {
     setSaving(to);
     setError(null);
     try {
+      const coords = await getLocation();
       const res = await fetch(`/api/rides/${rideId}/transition`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,6 +86,8 @@ export function ExecutionControls({
           note: note || undefined,
           incident: incident || undefined,
           reason: extra?.reason,
+          lat: coords.lat,
+          lng: coords.lng,
         }),
       });
       if (!res.ok) {
@@ -153,17 +168,34 @@ export function ExecutionControls({
         </div>
       </details>
 
-      {/* Primary execution actions */}
-      {actions.map((a) => (
-        <Button
-          key={a.to}
-          loading={saving === a.to}
-          onClick={() => advance(a.to)}
-          className="w-full text-lg"
-        >
-          {a.label}
-        </Button>
-      ))}
+      {/* Back (left) + primary step (right) */}
+      {(actions.length > 0 || backAction) && (
+        <div className="flex items-center gap-2">
+          {backAction && (
+            <Button
+              variant="ghost"
+              loading={saving === backAction.to}
+              onClick={() => advance(backAction.to)}
+              aria-label="Back"
+              className="shrink-0 min-h-0 px-2 py-1 text-base"
+            >
+              <span aria-hidden className="leading-none">←</span>
+            </Button>
+          )}
+          <div className="flex-1 space-y-2">
+            {actions.map((a) => (
+              <Button
+                key={a.to}
+                loading={saving === a.to}
+                onClick={() => advance(a.to)}
+                className="w-full text-lg"
+              >
+                {a.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Cancel button with confirmation dialog */}
       {showCancelButton && (

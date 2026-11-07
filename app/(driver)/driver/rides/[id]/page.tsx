@@ -4,8 +4,6 @@ import { getSession } from "@/lib/auth";
 import { apiFetch, type Ride, type RideEvent } from "@/lib/api";
 import { formatDateTime, formatMoney, navigationUrl } from "@/lib/format";
 import { Card } from "@/components/ui/Card";
-import { StatusBadge } from "@/components/rides/StatusBadge";
-import { RideTimeline } from "@/components/rides/RideTimeline";
 import { ExecutionControls } from "./_components/ExecutionControls";
 
 export const metadata: Metadata = { title: "Ride" };
@@ -14,17 +12,13 @@ export const metadata: Metadata = { title: "Ride" };
 function AddressLine({
   label,
   address,
-  lat,
-  lng,
   className = "",
 }: {
   label: string;
   address: string;
-  lat: number;
-  lng: number;
   className?: string;
 }) {
-  const url = lat != null && lng != null ? navigationUrl(lat, lng) : null;
+  const url = address ? navigationUrl(address) : null;
 
   return (
     <div className={`flex gap-2 ${className}`}>
@@ -78,7 +72,6 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
     <div>
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold">Ride #{ride.id}</h1>
-        <StatusBadge code={ride.status.code} />
       </div>
 
       {ride.trip_type === "roundtrip" && ride.return_pickup_at && (
@@ -105,8 +98,8 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
       </div>
       <dl className="mt-3 space-y-2 border-t border-line pt-3 text-sm">
         <div className="divide-y divide-line">
-          <AddressLine label="Pickup" address={ride.pickup_address} lat={ride.pickup_lat} lng={ride.pickup_lng} className="py-2.5" />
-          <AddressLine label="Drop-off" address={ride.dropoff_address} lat={ride.dropoff_lat} lng={ride.dropoff_lng} className="py-2.5" />
+            <AddressLine label="Pickup" address={ride.pickup_address} className="py-2.5" />
+            <AddressLine label="Drop-off" address={ride.dropoff_address} className="py-2.5" />
         </div>
         {ride.passenger_info.destination_phone && (
           <div className="flex gap-2"><dt className="w-16 shrink-0 font-semibold text-ink-500">Dest. phone</dt><dd><a href={`tel:${ride.passenger_info.destination_phone}`} className="tnum underline">{ride.passenger_info.destination_phone}</a></dd></div>
@@ -120,10 +113,7 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
         <ExecutionControls rideId={ride.id} statusCode={ride.status.code} canStart={isScheduledToday(ride.scheduled_pickup_at)} />
       </Card>
 
-      <Card className="mt-4">
-        <h2 className="font-semibold">Trip history</h2>
-        <div className="mt-3"><RideTimeline events={ride.events ?? []} /></div>
-      </Card>
+
     </div>
   );
 }

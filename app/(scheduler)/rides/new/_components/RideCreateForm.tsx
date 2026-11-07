@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 
-const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-
 /** Wisconsin fire-number pattern: E#### or W#### followed by road name */
 const WI_FIRE_NUMBER_PATTERN = /^([EW])(\d{3,5})\s+(.+)/i;
 
@@ -35,18 +33,11 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
   }
 
   try {
-    const params = new URLSearchParams({
-      q: address,
-      format: "json",
-      limit: "1",
-      addressdetails: "0",
-    });
-    const res = await fetch(`${NOMINATIM_URL}?${params}`, {
-      headers: { "Accept": "application/json", "User-Agent": "CivicRide/1.0" },
-    });
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`);
+    if (!res.ok) return null;
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      return { lat: Number(data[0].lat), lng: Number(data[0].lon) };
+    if (data && typeof data.lat === "number" && typeof data.lng === "number") {
+      return { lat: Number(data.lat), lng: Number(data.lng) };
     }
   } catch {}
   return null;
