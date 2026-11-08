@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
@@ -26,6 +27,7 @@ export function ExecutionControls({
   const [saving, setSaving] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [incident, setIncident] = useState("");
+  const [mileageClaimed, setMileageClaimed] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   // Cancellation dialog state
@@ -74,6 +76,10 @@ export function ExecutionControls({
   }
 
   async function advance(to: string, extra?: { reason?: string }) {
+    if (to === "completed" && !mileageClaimed) {
+      setError("Mileage claimed is required.");
+      return;
+    }
     setSaving(to);
     setError(null);
     try {
@@ -82,13 +88,14 @@ export function ExecutionControls({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          to_code: to,
-          note: note || undefined,
-          incident: incident || undefined,
-          reason: extra?.reason,
-          lat: coords.lat,
-          lng: coords.lng,
-        }),
+           to_code: to,
+           note: note || undefined,
+           incident: incident || undefined,
+           reason: extra?.reason,
+           lat: coords.lat,
+           lng: coords.lng,
+           mileage_claimed: to === "completed" && mileageClaimed ? Number(mileageClaimed) : undefined,
+         }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -167,6 +174,19 @@ export function ExecutionControls({
           </Button>
         </div>
       </details>
+
+      {actions.some((a) => a.to === "completed") && (
+        <Input
+          label="Mileage Claimed"
+          type="number"
+          step="any"
+          min={0}
+          required
+          value={mileageClaimed}
+          onChange={(e) => setMileageClaimed(e.target.value)}
+          hint="Miles claimed for this ride."
+        />
+      )}
 
       {/* Back (left) + primary step (right) */}
       {(actions.length > 0 || backAction) && (

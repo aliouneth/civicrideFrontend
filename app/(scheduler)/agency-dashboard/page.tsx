@@ -12,7 +12,7 @@ export default async function AgencyDashboardPage() {
 
   let ridesData: any[] = [];
   if (session) {
-    const res = await apiFetch<{ groups: { rides: any[] }[] }>("/rides/board?include_completed=1", session);
+    const res = await apiFetch<{ groups: { rides: any[] }[] }>("/rides/board?include_completed=1&days=120&past_days=365", session);
     ridesData = res.groups?.flatMap((g) => g.rides ?? []) ?? [];
   }
 
@@ -22,7 +22,7 @@ export default async function AgencyDashboardPage() {
 
   // Count drivers from rides data (unique driver_profile_ids)
   const driverCount = ridesData.length > 0 
-    ? new Set(ridesData.map((r: any) => r.driver_profile_id ?? r.assigned_by ?? 0)).size 
+    ? Array.from(new Set(ridesData.map((r: any) => r.active_assignment?.driver?.id ?? r.driver_profile_id ?? 0))).filter((id: number) => id !== 0).length
     : 0;
 
   return (

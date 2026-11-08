@@ -184,7 +184,7 @@ export interface Ride {
   pickup_address: string; pickup_lat: number; pickup_lng: number;
   dropoff_address: string; dropoff_lat: number; dropoff_lng: number;
   scheduled_pickup_at: string; actual_pickup_at: string | null; actual_dropoff_at: string | null;
-  priority: number; notes: string | null; price_cents: number | null;
+  priority: number; notes: string | null; price_cents: number | null; mileage_claimed?: number | null;
   trip_type: "one_way" | "roundtrip";
   return_pickup_at: string | null;
   return_ride_id: number | null;

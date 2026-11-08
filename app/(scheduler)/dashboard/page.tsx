@@ -38,10 +38,11 @@ export default async function SchedulerDashboard({
     { value: "next-30", days: 30, pastDays: 0 },
     { value: "next-60", days: 60, pastDays: 0 },
     { value: "next-90", days: 90, pastDays: 0 },
-    { value: "week", days: 7, pastDays: 7 },
-    { value: "fortnight", days: 14, pastDays: 14 },
-    { value: "month", days: 30, pastDays: 30 },
-    { value: "quarter", days: 90, pastDays: 90 },
+    { value: "past-7", days: 1, pastDays: 7 },
+    { value: "past-14", days: 1, pastDays: 14 },
+    { value: "past-30", days: 1, pastDays: 30 },
+    { value: "past-60", days: 1, pastDays: 60 },
+    { value: "past-90", days: 1, pastDays: 90 },
   ];
 
   const windowValue = params.time_window ?? "next-14";
@@ -51,7 +52,7 @@ export default async function SchedulerDashboard({
   const q = (params.q ?? "").slice(0, 120);
   const unassigned = params.unassigned === "1";
   const seriesOnly = params.series_only === "1";
-  const includeCompleted = params.include_completed === "1";
+  const includeCompleted = params.include_completed !== "0";
   const viewMode = (params.view === "calendar" ? "calendar" : params.view === "table" ? "table" : "grouped") as "grouped" | "calendar" | "table";
 
   // Custom Start/End dates are mutually exclusive with Time window: when either

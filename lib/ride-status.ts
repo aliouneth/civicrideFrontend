@@ -26,7 +26,7 @@ export function nextDriverActions(code: string): { to: string; label: string; pr
     case "assigned":     return [{ to: "en_route", label: "Start Ride", primary: true }];
     case "en_route":     return [{ to: "at_pickup", label: "At Pickup", primary: true }];
     case "at_pickup":    return [{ to: "transporting", label: "Start Transporting", primary: true }];
-    case "transporting": return [{ to: "completed", label: "At Dropoff", primary: true }];
+    case "transporting": return [{ to: "completed", label: "End Ride", primary: true }];
     default:             return [];
   }
 }

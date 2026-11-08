@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { BoardGroup } from "@/lib/api";
-import { formatDateTime, formatMoney } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { statusMeta } from "@/lib/ride-status";
 
 // Compact data-grid view of the dispatch board: one row per ride, with the
@@ -19,7 +19,6 @@ export function RidesTable({ groups }: { groups: BoardGroup[] }) {
               <th className="px-4 py-3 text-left font-semibold">Route</th>
               <th className="px-4 py-3 text-left font-semibold">Status</th>
               <th className="px-4 py-3 text-left font-semibold">Driver</th>
-              <th className="tnum px-4 py-3 text-right font-semibold">Price</th>
               <th className="px-4 py-3 text-right font-semibold" />
             </tr>
           </thead>
@@ -56,9 +55,6 @@ export function RidesTable({ groups }: { groups: BoardGroup[] }) {
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 font-medium text-ink-900">
                       {driverName ?? "—"}
-                    </td>
-                    <td className="tnum whitespace-nowrap px-4 py-3 text-right">
-                      {formatMoney(ride.price_cents)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <Link

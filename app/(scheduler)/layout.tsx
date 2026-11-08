@@ -14,6 +14,7 @@ const LINKS: NavLink[] = [
   { href: "/rides/new", label: "New ride" },
   { href: "/drivers", label: "Drivers" },
   { href: "/reports", label: "Reports" },
+  { href: "/attested-rides", label: "Attested Rides" },
 ];
 
 export default async function SchedulerLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +39,7 @@ export default async function SchedulerLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-dvh lg:flex">
-      <header className="border-b border-line bg-card lg:hidden">
+      <header className="border-b border-line bg-card lg:hidden print:hidden">
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">
           <Logo height={28} priority />
           <span className="truncate text-sm font-semibold text-ink-500">{user.name}</span>
@@ -48,7 +49,7 @@ export default async function SchedulerLayout({ children }: { children: React.Re
         </nav>
       </header>
 
-      <aside className="bg-brand-gradient hidden w-64 shrink-0 flex-col p-4 lg:flex">
+      <aside className="bg-brand-gradient hidden w-64 shrink-0 flex-col p-4 lg:flex print:hidden">
         <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-2 py-1">
           <Logo variant="mark" height={40} plated priority />
           <span className="text-lg font-bold tracking-tight text-white">CivicRide</span>

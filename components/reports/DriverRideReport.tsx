@@ -23,6 +23,8 @@ interface Report {
     attested?: number;
     fare_cents: number;
     distance_miles: number;
+    mileage_claimed?: number;
+    mileage_claimed_miles?: number;
   };
   rides: Ride[];
 }
@@ -74,7 +76,7 @@ function RidesTable({ rides }: { rides: Ride[] }) {
             <th className="px-3 py-2">Route</th>
             <th className="px-3 py-2">Status</th>
             <th className="px-3 py-2">Attested</th>
-            <th className="px-3 py-2 text-right">Fare</th>
+            <th className="px-3 py-2 text-right">Mileage claimed</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -106,8 +108,8 @@ function RidesTable({ rides }: { rides: Ride[] }) {
                     <span className="text-ink-500">&mdash;</span>
                   )}
                 </td>
-                <td className="tnum px-3 py-2.5 text-right font-semibold">
-                  {formatMoney(ride.price_cents)}
+                <td className="tnum px-3 py-2.5 text-right">
+                  {ride.mileage_claimed != null ? `${ride.mileage_claimed} mi` : "—"}
                 </td>
               </tr>
             );
@@ -117,6 +119,9 @@ function RidesTable({ rides }: { rides: Ride[] }) {
           <tr className="border-t border-line bg-ink-50 font-semibold">
             <td className="px-3 py-2.5" colSpan={5}>
               Total
+            </td>
+            <td className="tnum px-3 py-2.5 text-right">
+              {rides.reduce((sum, ride) => sum + (ride.mileage_claimed ?? 0), 0).toFixed(1)} mi
             </td>
             <td className="tnum px-3 py-2.5 text-right">
               {formatMoney(
@@ -261,7 +266,7 @@ export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
           <p className="text-sm text-ink-500">
             {report.driver.name} — {monthLabel(report.month)}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <Card><Stat label="Total rides" value={String(report.summary.rides ?? 0)} /></Card>
             <Card><Stat label="Completed" value={String(report.summary.completed ?? 0)} /></Card>
             <Card><Stat label="Cancelled" value={String(report.summary.cancelled ?? 0)} /></Card>
@@ -275,8 +280,7 @@ export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
                 }
               />
             </Card>
-            <Card><Stat label="Fares" value={formatMoney(report.summary.fare_cents ?? 0)} /></Card>
-            <Card><Stat label="Distance" value={`${report.summary.distance_miles ?? 0} mi`} /></Card>
+            <Card><Stat label="Mileage claimed" value={`${report.summary.mileage_claimed_miles ?? report.summary.mileage_claimed ?? 0} mi`} /></Card>
           </div>
           <RidesTable rides={report.rides} />
 

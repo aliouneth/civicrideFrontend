@@ -29,10 +29,11 @@ const TIME_WINDOWS = [
   { value: "next-30", label: "Next 30 days", days: 30, pastDays: 0 },
   { value: "next-60", label: "Next 60 days", days: 60, pastDays: 0 },
   { value: "next-90", label: "Next 90 days", days: 90, pastDays: 0 },
-  { value: "week", label: "Past week → Next week", days: 7, pastDays: 7 },
-  { value: "fortnight", label: "Past 2 weeks → Next 2 weeks", days: 14, pastDays: 14 },
-  { value: "month", label: "Past month → Next month", days: 30, pastDays: 30 },
-  { value: "quarter", label: "Past 3 months → Next 3 months", days: 90, pastDays: 90 },
+  { value: "past-7", label: "Past 7 days", days: 1, pastDays: 7 },
+  { value: "past-14", label: "Past 14 days", days: 1, pastDays: 14 },
+  { value: "past-30", label: "Past 30 days", days: 1, pastDays: 30 },
+  { value: "past-60", label: "Past 60 days", days: 1, pastDays: 60 },
+  { value: "past-90", label: "Past 90 days", days: 1, pastDays: 90 },
 ];
 
 export interface BoardFilterState {
