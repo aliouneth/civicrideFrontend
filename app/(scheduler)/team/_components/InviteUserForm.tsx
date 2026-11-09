@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import type { CreateUserResult } from "@/lib/api";
 
 const ROLES = [
   { value: "scheduler", label: "Dispatcher" },
@@ -44,7 +45,8 @@ export function InviteUserForm() {
         else setError(body.message ?? "Failed to create user.");
         return;
       }
-      setCreated({ email: payload.email, password: body.temporary_password });
+      const result = body as CreateUserResult;
+      setCreated({ email: payload.email, password: result.temporary_password });
       router.refresh();
       formRef.current?.reset();
     } catch {
@@ -64,7 +66,8 @@ export function InviteUserForm() {
         <div className="rounded-lg border border-line bg-ok-bg px-4 py-3 text-sm">
           <p className="font-semibold text-ok-fg">User created — {created.email}</p>
           <p className="mt-1 text-ink-700">
-            Share this one-time password. It is not stored and cannot be shown again.
+            Share this one-time password. It cannot be shown again, so ask them to
+            change it after signing in.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <code className="tnum rounded bg-card px-2 py-1 font-mono text-base">{created.password}</code>
@@ -90,11 +93,7 @@ export function InviteUserForm() {
           className="rounded-lg border border-line bg-card px-3 py-2.5 text-base font-medium text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-600"
           suppressHydrationWarning
         >
-          {[
-            { value: "scheduler", label: "Dispatcher" },
-            { value: "admin", label: "Admin" },
-            { value: "driver", label: "Driver" },
-          ].map((r) => (
+          {ROLES.map((r) => (
             <option key={r.value} value={r.value}>{r.label}</option>
           ))}
         </select>

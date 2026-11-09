@@ -5,14 +5,14 @@ import { apiFetch, type User } from "@/lib/api";
 import { AgencyUsersList } from "./_components/AgencyUsersList";
 import { InviteUserForm } from "./_components/InviteUserForm";
 
-export const metadata = { title: "Agency Users" } satisfies Metadata;
+export const metadata = { title: "Team" } satisfies Metadata;
 
 export const dynamic = "force-dynamic";
 
-export default async function AgencyUsersPage() {
+export default async function TeamPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.role.name !== "supervisor") redirect("/dashboard");
+  if (!["supervisor", "admin"].includes(user.role.name)) redirect("/dashboard");
 
   const session = await getSession();
   let users: User[] = [];
@@ -28,7 +28,7 @@ export default async function AgencyUsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Agency Users</h1>
+      <h1 className="text-2xl font-bold">Team</h1>
       <p className="mt-1 text-sm text-ink-500">
         People with access to this agency — dispatchers, admins, and drivers.
       </p>

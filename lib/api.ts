@@ -120,6 +120,11 @@ export interface User {
   tenant?: Tenant | null;
   driver_profile?: DriverProfile | null;
 }
+/** Create-user response: the user plus a one-time temporary password. */
+export interface CreateUserResult {
+  user: User;
+  temporary_password: string;
+}
 export interface RideStatus { code: string; label: string; is_terminal: boolean }
 export interface Assignment {
   id: number; driver_profile_id: number; assigned_at: string;

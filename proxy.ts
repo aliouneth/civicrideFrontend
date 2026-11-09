@@ -10,11 +10,15 @@ export function proxy(request: NextRequest) {
   // Root ("/") is public: app/page.tsx renders the marketing site for
   // visitors and redirects authenticated users to their role home.
 
+  // The old agency-users page became Team.
+  if (pathname.startsWith("/agency-users")) {
+    return NextResponse.redirect(new URL("/team", request.url));
+  }
+
   const isAppRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/rides")
     || pathname.startsWith("/drivers") || pathname.startsWith("/reports")
     || pathname.startsWith("/driver") || pathname.startsWith("/platform/dashboard")
-    || pathname.startsWith("/agency-users") || pathname.startsWith("/agency-dashboard")
-    || pathname.startsWith("/team");
+    || pathname.startsWith("/agency-dashboard") || pathname.startsWith("/team");
 
   if (isAppRoute && !token) {
     const loginPath = pathname.startsWith("/platform") ? "/platform/login" : "/login";

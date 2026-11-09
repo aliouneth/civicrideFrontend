@@ -32,9 +32,9 @@ export default async function SchedulerLayout({ children }: { children: React.Re
     } catch {}
   }
 
-  // Agency Users is a supervisor-only management surface.
-  const links: NavLink[] = user.role.name === "supervisor"
-    ? [...LINKS, { href: "/agency-users", label: "Agency Users" }]
+  // Team is a management surface for the roles that can manage users.
+  const links: NavLink[] = ["supervisor", "admin"].includes(user.role.name)
+    ? [...LINKS, { href: "/team", label: "Team" }]
     : LINKS;
 
   return (
@@ -45,7 +45,7 @@ export default async function SchedulerLayout({ children }: { children: React.Re
           <span className="truncate text-sm font-semibold text-ink-500">{user.name}</span>
         </div>
         <nav aria-label="Scheduler" className="flex gap-1 overflow-x-auto p-2">
-          <NavLinks links={LINKS} variant="tabs" />
+          <NavLinks links={links} variant="tabs" />
         </nav>
       </header>
 

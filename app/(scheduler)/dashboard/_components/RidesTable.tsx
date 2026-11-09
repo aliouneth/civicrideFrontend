@@ -40,10 +40,10 @@ export function RidesTable({ groups }: { groups: BoardGroup[] }) {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="max-w-[200px] truncate text-ink-900" title={ride.pickup_address}>
+                      <p className="max-w-[200px] break-words text-ink-900" title={ride.pickup_address}>
                         {ride.pickup_address}
                       </p>
-                      <p className="max-w-[200px] truncate text-xs text-ink-500" title={ride.dropoff_address}>
+                      <p className="max-w-[200px] break-words text-xs text-ink-500" title={ride.dropoff_address}>
                         → {ride.dropoff_address}
                       </p>
                     </td>
