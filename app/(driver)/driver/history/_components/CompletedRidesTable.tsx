@@ -33,8 +33,8 @@ export function CompletedRidesTable({ rides }: { rides: Ride[] }) {
               </td>
               <td className="px-3 py-2.5 font-medium">{ride.passenger_info.name}</td>
               <td className="max-w-[10rem] px-3 py-2.5 text-ink-600">
-                <span className="block truncate">{ride.pickup_address}</span>
-                <span className="block truncate">→ {ride.dropoff_address}</span>
+                <span className="block break-words">{ride.pickup_address}</span>
+                <span className="block break-words">→ {ride.dropoff_address}</span>
               </td>
               <td className="px-3 py-2.5 text-right font-semibold tnum">
                 {formatMoney(ride.price_cents)}
