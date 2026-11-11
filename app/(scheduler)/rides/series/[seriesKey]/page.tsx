@@ -64,7 +64,7 @@ export default async function SeriesDetailPage({
                 : ride.occurrence_index + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <RideCard ride={ride} href={`/rides/${ride.id}/assign`} />
+              <RideCard ride={ride} href={`/rides/${ride.id}/assign`} timeZone={session.timezone} />
             </div>
           </li>
         ))}

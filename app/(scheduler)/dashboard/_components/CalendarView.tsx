@@ -1,19 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  addDays,
-  addWeeks,
-  addMonths,
-  isSameMonth,
-  isSameDay,
-} from "date-fns";
 import Link from "next/link";
+import { formatTime } from "@/lib/format";
 
 type ViewMode = "day" | "week" | "month";
 
@@ -25,10 +14,85 @@ interface CalendarRide {
 
 interface CalendarViewProps {
   groups: { label: string; rides: CalendarRide[] }[];
+  timeZone?: string;
 }
 
-function dayKey(d: Date): string {
-  return format(d, "yyyy-MM-dd");
+// The grid is calendar math, not clock math: days are held as UTC-midnight
+// "calendar days" so the server (UTC) and every browser render an identical
+// grid. Only ride grouping and the Today marker consult the user's own zone.
+function utcDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month, day));
+}
+
+function utcKey(date: Date): string {
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${month}-${day}`;
+}
+
+// A ride belongs on the calendar day the current user is living in, not on
+// the server's UTC day; the same zone drives the "Today" marker.
+function dayKey(d: Date, timeZone?: string): string {
+  if (!timeZone) {
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${month}-${day}`;
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(d);
+
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+/** The user's current calendar day, encoded as a UTC-naive Date. */
+function todayInZone(timeZone?: string): Date {
+  if (!timeZone) {
+    const now = new Date();
+    return utcDate(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  return utcDate(get("year"), get("month") - 1, get("day"));
+}
+
+function addDays(date: Date, amount: number): Date {
+  return utcDate(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + amount);
+}
+
+function startOfWeek(date: Date): Date {
+  return addDays(date, -((date.getUTCDay() + 6) % 7));
+}
+
+function endOfWeek(date: Date): Date {
+  return addDays(startOfWeek(date), 6);
+}
+
+function startOfMonth(date: Date): Date {
+  return utcDate(date.getUTCFullYear(), date.getUTCMonth(), 1);
+}
+
+function endOfMonth(date: Date): Date {
+  return utcDate(date.getUTCFullYear(), date.getUTCMonth() + 1, 0);
+}
+
+function addMonths(date: Date, amount: number): Date {
+  return utcDate(date.getUTCFullYear(), date.getUTCMonth() + amount, 1);
+}
+
+function isSameMonth(a: Date, b: Date): boolean {
+  return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth();
+}
+
+/** Labels for calendar days: read as the date it says it is, never shifted. */
+function calendarLabel(date: Date, options: Intl.DateTimeFormatOptions): string {
+  return new Intl.DateTimeFormat("en-US", { ...options, timeZone: "UTC" }).format(date);
 }
 
 function dayRange(start: Date, end: Date): Date[] {
@@ -41,55 +105,56 @@ function dayRange(start: Date, end: Date): Date[] {
   return days;
 }
 
-export function CalendarView({ groups }: CalendarViewProps) {
+export function CalendarView({ groups, timeZone }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("month");
-  const [anchorDate, setAnchorDate] = useState<Date>(new Date());
+  const [anchorDate, setAnchorDate] = useState<Date>(() => todayInZone(timeZone));
 
   const ridesByDate = useMemo(() => {
     const map = new Map<string, (CalendarRide & { groupLabel: string })[]>();
     groups.forEach((group) => {
       group.rides.forEach((ride) => {
-        const key = dayKey(new Date(ride.scheduled_pickup_at));
+        const key = dayKey(new Date(ride.scheduled_pickup_at), timeZone);
         if (!map.has(key)) map.set(key, []);
         map.get(key)!.push({ ...ride, groupLabel: group.label });
       });
     });
     return map;
-  }, [groups]);
+  }, [groups, timeZone]);
 
-  const getRidesForDate = (date: Date) => ridesByDate.get(dayKey(date)) || [];
+  const getRidesForDate = (date: Date) => ridesByDate.get(utcKey(date)) || [];
 
   const navigate = (direction: 1 | -1) => {
     setAnchorDate((d) => {
       if (viewMode === "day") return addDays(d, direction);
-      if (viewMode === "week") return addWeeks(d, direction);
+      if (viewMode === "week") return addDays(d, 7 * direction);
       return addMonths(d, direction);
     });
   };
 
-  const goToday = () => setAnchorDate(new Date());
+  const goToday = () => setAnchorDate(todayInZone(timeZone));
 
   const rangeLabel = useMemo(() => {
-    if (viewMode === "day") return format(anchorDate, "EEEE, MMMM d, yyyy");
-    if (viewMode === "week") {
-      const start = startOfWeek(anchorDate, { weekStartsOn: 1 });
-      const end = endOfWeek(anchorDate, { weekStartsOn: 1 });
-      return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+    if (viewMode === "day") {
+      return calendarLabel(anchorDate, {
+        weekday: "long", month: "long", day: "numeric", year: "numeric",
+      });
     }
-    return format(anchorDate, "MMMM yyyy");
+    if (viewMode === "week") {
+      const start = startOfWeek(anchorDate);
+      const end = endOfWeek(anchorDate);
+      const startLabel = calendarLabel(start, { month: "short", day: "numeric" });
+      const endLabel = calendarLabel(end, { month: "short", day: "numeric", year: "numeric" });
+      return `${startLabel} – ${endLabel}`;
+    }
+    return calendarLabel(anchorDate, { month: "long", year: "numeric" });
   }, [viewMode, anchorDate]);
 
   const days = useMemo(() => {
     if (viewMode === "day") return [anchorDate];
     if (viewMode === "week") {
-      return dayRange(
-        startOfWeek(anchorDate, { weekStartsOn: 1 }),
-        endOfWeek(anchorDate, { weekStartsOn: 1 }),
-      );
+      return dayRange(startOfWeek(anchorDate), endOfWeek(anchorDate));
     }
-    const start = startOfWeek(startOfMonth(anchorDate), { weekStartsOn: 1 });
-    const end = endOfWeek(endOfMonth(anchorDate), { weekStartsOn: 1 });
-    return dayRange(start, end);
+    return dayRange(startOfWeek(startOfMonth(anchorDate)), endOfWeek(endOfMonth(anchorDate)));
   }, [viewMode, anchorDate]);
 
   const totalRides = useMemo(() => {
@@ -99,16 +164,16 @@ export function CalendarView({ groups }: CalendarViewProps) {
 
   const renderDayCell = (date: Date, expanded: boolean) => {
     const rides = getRidesForDate(date);
-    const isToday = isSameDay(date, new Date());
+    const isToday = utcKey(date) === dayKey(new Date(), timeZone);
     const inMonth = isSameMonth(date, anchorDate);
     const dimmed = viewMode === "month" && !inMonth;
 
     if (viewMode === "day") {
       return (
-        <div key={dayKey(date)} className="rounded-xl border border-line bg-card p-4">
+        <div key={utcKey(date)} className="rounded-xl border border-line bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
             <span className={`text-lg font-semibold ${isToday ? "text-brand-700" : "text-ink-900"}`}>
-              {format(date, "EEEE, MMMM d, yyyy")}
+              {calendarLabel(date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
               {isToday && (
                 <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
                   Today
@@ -132,7 +197,7 @@ export function CalendarView({ groups }: CalendarViewProps) {
                     <span className="font-medium">{ride.passenger_info?.name ?? "Passenger"}</span>
                     <span className="text-sm text-ink-500">{ride.groupLabel}</span>
                     <span className="tnum text-sm text-ink-700">
-                      {format(new Date(ride.scheduled_pickup_at), "h:mm a")}
+                      {formatTime(ride.scheduled_pickup_at, timeZone)}
                     </span>
                   </Link>
                 </li>
@@ -145,7 +210,7 @@ export function CalendarView({ groups }: CalendarViewProps) {
 
     return (
       <div
-        key={dayKey(date)}
+        key={utcKey(date)}
         className={`relative border-r border-b border-line transition-colors ${
           isToday ? "bg-brand-50 ring-2 ring-inset ring-brand-600" : "bg-card"
         } ${dimmed ? "opacity-40" : ""}`}
@@ -153,7 +218,9 @@ export function CalendarView({ groups }: CalendarViewProps) {
       >
         <div className="flex items-center justify-between px-2 pt-1.5">
           <span className={`text-sm font-semibold ${isToday ? "text-brand-700" : "text-ink-900"}`}>
-            {format(date, viewMode === "week" ? "EEE d" : "d")}
+            {calendarLabel(date, viewMode === "week"
+              ? { weekday: "short", day: "numeric" }
+              : { day: "numeric" })}
           </span>
           {rides.length > 0 && (
             <span className="tnum rounded-full bg-brand-100 px-1.5 py-0.5 text-xs font-semibold text-brand-700">

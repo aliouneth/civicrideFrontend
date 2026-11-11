@@ -43,14 +43,12 @@ function AddressLine({
 
 // Driver execution UI: start → navigate → pickup → drop-off, one action per state.
 // The backend also refuses a driver starting a ride not scheduled today.
-function isScheduledToday(iso: string): boolean {
-  const sched = new Date(iso);
-  const now = new Date();
-  return (
-    sched.getUTCFullYear() === now.getUTCFullYear()
-    && sched.getUTCMonth() === now.getUTCMonth()
-    && sched.getUTCDate() === now.getUTCDate()
-  );
+function isScheduledToday(iso: string, timeZone: string): boolean {
+  const day = (value: Date) => new Intl.DateTimeFormat("en-CA", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(value);
+
+  return day(new Date(iso)) === day(new Date());
 }
 
 export default async function DriverRidePage({ params }: { params: Promise<{ id: string }> }) {
@@ -63,7 +61,7 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
 
   // Same-day rides: surface the pickup time big, drop the date entirely.
   const pickupTime = new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC",
+    timeZone: session.timezone,
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(ride.scheduled_pickup_at));
@@ -76,7 +74,7 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
 
       {ride.trip_type === "roundtrip" && ride.return_pickup_at && (
         <p role="note" className="tnum mt-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-800">
-          ⇄ Round trip — you bring the passenger back at {formatDateTime(ride.return_pickup_at)}
+          ⇄ Round trip — you bring the passenger back at {formatDateTime(ride.return_pickup_at, session.timezone)}
           {ride.return_ride_id ? ` (as ride #${ride.return_ride_id})` : " under this ride"}.
         </p>
       )}
@@ -110,7 +108,7 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
             <div className="flex gap-2"><dt className="w-16 shrink-0 font-semibold text-ink-500">Distance</dt><dd className="tnum">{ride.total_distance_miles} mi</dd></div>
           )}
         </dl>
-        <ExecutionControls rideId={ride.id} statusCode={ride.status.code} canStart={isScheduledToday(ride.scheduled_pickup_at)} />
+        <ExecutionControls rideId={ride.id} statusCode={ride.status.code} canStart={isScheduledToday(ride.scheduled_pickup_at, session.timezone)} />
       </Card>
 
 

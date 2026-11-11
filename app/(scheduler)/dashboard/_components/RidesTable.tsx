@@ -6,7 +6,7 @@ import { statusMeta } from "@/lib/ride-status";
 // Compact data-grid view of the dispatch board: one row per ride, with the
 // grouping bucket (day / series / passenger / driver) as the first column so
 // the grid stays meaningful no matter how the board is grouped.
-export function RidesTable({ groups }: { groups: BoardGroup[] }) {
+export function RidesTable({ groups, timeZone }: { groups: BoardGroup[]; timeZone: string }) {
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-card shadow-sm">
       <div className="overflow-x-auto">
@@ -31,7 +31,7 @@ export function RidesTable({ groups }: { groups: BoardGroup[] }) {
                   <tr key={ride.id} className="border-t border-line transition-colors hover:bg-brand-50/40">
                     <td className="whitespace-nowrap px-4 py-3 text-ink-500">{group.label}</td>
                     <td className="whitespace-nowrap px-4 py-3 font-medium text-ink-900">
-                      {formatDateTime(ride.scheduled_pickup_at)}
+                      {formatDateTime(ride.scheduled_pickup_at, timeZone)}
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-ink-900">{ride.passenger_info.name}</p>

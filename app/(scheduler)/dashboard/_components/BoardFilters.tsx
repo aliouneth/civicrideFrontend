@@ -55,7 +55,7 @@ function decodeWindow(value: string): { days: number; pastDays: number } {
 
 function encodeWindow(days: number, pastDays: number): string {
   const w = TIME_WINDOWS.find(w => w.days === days && w.pastDays === pastDays);
-  return w ? w.value : "next-14";
+  return w ? w.value : "next-30";
 }
 
 // Plain GET form: filtering works without JS and every state is a shareable URL.
@@ -66,7 +66,7 @@ export function BoardFilters({ state }: { state: BoardFilterState }) {
   const hasDateRange = state.startDate !== "" || state.endDate !== "";
 
   const active = state.q !== "" || state.unassigned || state.seriesOnly
-    || state.days !== 14 || state.pastDays !== 0 || state.includeCompleted
+    || state.days !== 30 || state.pastDays !== 0 || state.includeCompleted
     || hasDateRange;
 
   // "Clear date range" drops just the dates and hands control back to the time

@@ -45,7 +45,7 @@ export default async function SchedulerDashboard({
     { value: "past-90", days: 1, pastDays: 90 },
   ];
 
-  const windowValue = params.time_window ?? "next-14";
+  const windowValue = params.time_window ?? "next-30";
   const windowDef = TIME_WINDOWS.find(w => w.value === windowValue) ?? TIME_WINDOWS[1];
   const days = windowDef.days;
   const pastDays = windowDef.pastDays;
@@ -74,6 +74,7 @@ export default async function SchedulerDashboard({
   });
 
   const board = await apiFetch<Board>(`/rides/board?${query}`, session).catch(() => null);
+  const timeZone = session.timezone;
 
   const filtering = hasDateRange || q !== "" || unassigned || seriesOnly || days !== 14 || pastDays !== 0 || includeCompleted;
 
@@ -124,7 +125,7 @@ export default async function SchedulerDashboard({
       </p>
 
       {viewMode === "calendar" ? (
-        <CalendarView groups={board.groups} />
+        <CalendarView groups={board.groups} timeZone={timeZone} />
       ) : board.groups.length === 0 ? (
         <div className="mt-6">
           <EmptyState
@@ -137,7 +138,7 @@ export default async function SchedulerDashboard({
           />
         </div>
       ) : viewMode === "table" ? (
-        <RidesTable groups={board.groups} />
+        <RidesTable groups={board.groups} timeZone={timeZone} />
       ) : (
         <div className="mt-4 space-y-8">
           {board.groups.map((group) => (
@@ -166,7 +167,7 @@ export default async function SchedulerDashboard({
               </div>
               <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {group.rides.map((ride) => (
-                  <RideCard key={ride.id} ride={ride} href={`/rides/${ride.id}/assign`} />
+                  <RideCard key={ride.id} ride={ride} href={`/rides/${ride.id}/assign`} timeZone={timeZone} />
                 ))}
               </div>
             </section>

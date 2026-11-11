@@ -1,5 +1,7 @@
-// Typed Laravel API client. Server Components pass token+tenant explicitly
-// (from httpOnly cookies); client components use apiFromBrowser() instead.
+// Typed Laravel API client. Server Components pass token+tenant+timezone
+// explicitly (from cookies); client components use apiFromBrowser() instead.
+import { browserTimezone } from "./timezone";
+
 const DEFAULT_API_BASE = "http://localhost:8000/api/v1";
 
 /**
@@ -42,7 +44,7 @@ export interface ApiError {
 
 export async function apiFetch<T>(
   path: string,
-  opts: { token: string; tenant: string; init?: RequestInit; revalidate?: number } ,
+  opts: { token: string; tenant: string; timezone?: string; init?: RequestInit; revalidate?: number } ,
 ): Promise<T> {
   // An empty tenant is no claim at all: the API then falls back to the bearer
   // token, so a driver whose tenant cookie was lost still gets their agency.
@@ -55,6 +57,8 @@ export async function apiFetch<T>(
       Accept: "application/json",
       Authorization: `Bearer ${opts.token}`,
       ...(tenant ? { "X-Tenant": tenant } : {}),
+      // Day/month filters are calendar days on the user's clock, not the server's.
+      ...(opts.timezone ? { "X-Timezone": opts.timezone } : {}),
       ...(opts.init?.headers ?? {}),
     },
     // Explicit cache semantics (Next.js 16): dynamic ops data defaults to fresh.
@@ -91,6 +95,8 @@ export async function apiFromBrowser<T>(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      // The proxy also falls back to the cr_tz cookie for raw fetch() calls.
+      "X-Timezone": browserTimezone(),
       ...(init?.headers ?? {}),
     },
     credentials: "same-origin",

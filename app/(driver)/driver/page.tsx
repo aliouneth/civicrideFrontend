@@ -39,7 +39,7 @@ async function DriverDashboardContent({
   ]);
 
   const selfAssignOn = tenant?.settings?.allow_driver_self_assignment === true;
-  const timeZone = tenant?.settings?.timezone ?? "UTC";
+  const timeZone = session.timezone;
 
   const openRides = (page: CursorPage<Ride> | null): Ride[] =>
     (page?.data ?? []).filter((ride) => OPEN_STATUSES.includes(ride.status.code));

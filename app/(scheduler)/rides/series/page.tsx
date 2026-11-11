@@ -21,7 +21,8 @@ function ruleSummary(s: RideSeriesSummary): string {
   const bound = r.count
     ? `${r.count} rides`
     : r.until
-      ? `until ${new Date(r.until).toLocaleDateString()}`
+      // A calendar date, not an instant: never shift it into another day.
+      ? `until ${new Intl.DateTimeFormat("en-US", { timeZone: "UTC", dateStyle: "medium" }).format(new Date(r.until))}`
       : "open-ended";
 
   return `${every} · ${bound}`;
@@ -62,7 +63,7 @@ export default async function SeriesIndexPage() {
             </div>
           ) : (
             <div className="mt-3 space-y-4">
-              {open.map((s) => <SeriesCard key={s.series_key} series={s} />)}
+              {open.map((s) => <SeriesCard key={s.series_key} series={s} timeZone={session.timezone} />)}
             </div>
           )}
 
@@ -70,7 +71,7 @@ export default async function SeriesIndexPage() {
             <>
               <h2 className="mt-8 text-lg font-semibold">Finished ({closed.length})</h2>
               <div className="mt-3 space-y-4">
-                {closed.map((s) => <SeriesCard key={s.series_key} series={s} />)}
+                {closed.map((s) => <SeriesCard key={s.series_key} series={s} timeZone={session.timezone} />)}
               </div>
             </>
           )}
@@ -80,7 +81,7 @@ export default async function SeriesIndexPage() {
   );
 }
 
-function SeriesCard({ series }: { series: RideSeriesSummary }) {
+function SeriesCard({ series, timeZone }: { series: RideSeriesSummary; timeZone: string }) {
   return (
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -93,8 +94,8 @@ function SeriesCard({ series }: { series: RideSeriesSummary }) {
           <p className="mt-0.5 text-sm text-ink-500">{ruleSummary(series)}</p>
           <p className="tnum mt-1 text-sm text-ink-500">
             {series.occurrences} ride(s) · {series.open_count} open · first{" "}
-            {formatDateTime(series.first_pickup_at ?? "")}
-            {series.next_pickup_at && ` · next ${formatDateTime(series.next_pickup_at)}`}
+            {formatDateTime(series.first_pickup_at ?? "", timeZone)}
+            {series.next_pickup_at && ` · next ${formatDateTime(series.next_pickup_at, timeZone)}`}
           </p>
         </div>
       </div>

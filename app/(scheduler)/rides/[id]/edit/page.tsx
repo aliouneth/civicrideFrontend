@@ -33,7 +33,7 @@ export default async function EditRidePage({
     passenger_phone: ride.passenger_info.phone,
     additional_riders: ride.passenger_info.additional_riders ?? 0,
     destination_phone: ride.passenger_info.destination_phone ?? null,
-    scheduled_pickup_at: toDatetimeLocal(ride.scheduled_pickup_at),
+    scheduled_pickup_at: toDatetimeLocal(ride.scheduled_pickup_at, session.timezone),
     pickup_address: ride.pickup_address,
     pickup_lat: ride.pickup_lat,
     pickup_lng: ride.pickup_lng,
@@ -44,7 +44,7 @@ export default async function EditRidePage({
     wheelchair: ride.passenger_info.wheelchair,
     child_seat: ride.passenger_info.child_seat,
     trip_type: ride.trip_type,
-    return_pickup_at: ride.return_pickup_at ? toDatetimeLocal(ride.return_pickup_at) : undefined,
+    return_pickup_at: ride.return_pickup_at ? toDatetimeLocal(ride.return_pickup_at, session.timezone) : undefined,
     return_ride_id: ride.return_ride_id,
     outbound_ride_id: ride.outbound_ride?.id ?? null,
   };

@@ -16,7 +16,7 @@ async function DriverReportsPageContent() {
       <p className="mt-1 text-sm text-ink-500">
         Your monthly rides — count, completed/cancelled, fares, and distance.
       </p>
-      <div className="mt-4"><DriverRideReport mode="self" /></div>
+      <div className="mt-4"><DriverRideReport mode="self" timeZone={session.timezone} /></div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveApiBase } from "@/lib/api";
+import { normalizeTimezone, TIMEZONE_COOKIE } from "@/lib/timezone";
 
 // Thin BFF proxy: attaches the httpOnly token + tenant cookie server-side so
 // client components never handle credentials. Forwards status codes as-is.
@@ -38,6 +39,12 @@ async function proxy(request: NextRequest, path: string[]) {
     ? (callerTenant !== null ? normalizeTenant(callerTenant) : cookieTenant)
     : cookieTenant;
 
+  // The user's own zone (written by <TimezoneSync />). A caller-supplied header
+  // wins for callers that know better (e.g. a phone previewing the web app).
+  const callerZone = request.headers.get("x-timezone");
+  const cookieZone = store.get(TIMEZONE_COOKIE)?.value;
+  const timezone = normalizeTimezone(callerZone) ?? normalizeTimezone(cookieZone) ?? null;
+
   const url = `${resolveApiBase()}/${path.join("/")}${request.nextUrl.search}`;
   const body = ["GET", "HEAD"].includes(request.method)
     ? undefined
@@ -53,6 +60,7 @@ async function proxy(request: NextRequest, path: string[]) {
         // No tenant known: send no claim at all, so the API resolves the tenant
         // from the public host or the token instead of failing with a 404.
         ...(tenant ? { "X-Tenant": tenant } : {}),
+        ...(timezone ? { "X-Timezone": timezone } : {}),
         // The API only sees its own hostname: tell it which host the browser
         // used so agency.civicride.com can be resolved to a tenant.
         "X-Tenant-Host": request.headers.get("host") ?? "",

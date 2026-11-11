@@ -7,10 +7,6 @@ import { RideCreateForm, type RideDefaults } from "./_components/RideCreateForm"
 
 export const metadata: Metadata = { title: "New ride" };
 
-interface TenantSettings {
-  settings?: { timezone?: string };
-}
-
 /**
  * `?clone=<id>` prefills the form from an existing ride. The pickup time is the
  * one field we cannot copy verbatim: the backend rejects a past pickup, and a
@@ -59,15 +55,11 @@ export default async function NewRidePage({
   const sourceId = Number(clone);
   const hasClone = Number.isInteger(sourceId) && sourceId > 0;
 
-  const [source, tenant] = await Promise.all([
-    hasClone
-      ? apiFetch<Ride>(`/rides/${sourceId}`, session).catch(() => null)
-      : Promise.resolve(null),
-    apiFetch<TenantSettings>("/tenant", session).catch(() => null),
-  ]);
+  const source = hasClone
+    ? await apiFetch<Ride>(`/rides/${sourceId}`, session).catch(() => null)
+    : null;
 
-  const timeZone = tenant?.settings?.timezone ?? "UTC";
-  const defaults = source ? cloneDefaults(source, timeZone) : undefined;
+  const defaults = source ? cloneDefaults(source, session.timezone) : undefined;
 
   return (
     <div className="mx-auto max-w-3xl">

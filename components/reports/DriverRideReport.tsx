@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { statusMeta } from "@/lib/ride-status";
-import { formatDateTime, formatMoney } from "@/lib/format";
+import { currentMonthKey, formatDateTime, formatMoney } from "@/lib/format";
 import type { Ride } from "@/lib/api";
 
 interface DriverOption {
@@ -33,13 +33,6 @@ const ATTESTABLE_STATUSES = new Set(["completed", "cancelled"]);
 
 const DISCLAIMER_TEXT = `I declare this account of daily expenses is true and correct. These are actual, reasonable and necessary expenses incurred by me in the performance of my duties required by the public service. No part of this account has been previously reimbursed to me. I certify that I have read and understand the Vehicle Usage Policy (Admin Rule AR05-01) and the Travel Regulation Policy (Admin Rule AR04-01) and do adhere to all provisions of them. These Admin Rules can be obtained from the County's intranet site on the County Executives page or contact your department head or supervisor for a copy.`;
 
-// Current month as "YYYY-MM" (UTC: near month boundaries the driver's webzone
-// may still be the previous month, but the picker lets them choose any month).
-function currentMonthKey(): string {
-  const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
-}
-
 function monthLabel(key: string): string {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "UTC",
@@ -57,7 +50,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function RidesTable({ rides }: { rides: Ride[] }) {
+function RidesTable({ rides, timeZone }: { rides: Ride[]; timeZone: string }) {
   if (rides.length === 0) {
     return (
       <p className="mt-4 rounded-xl border border-line bg-card px-4 py-6 text-center text-sm text-ink-500">
@@ -85,7 +78,7 @@ function RidesTable({ rides }: { rides: Ride[] }) {
             return (
               <tr key={ride.id} className="transition-colors hover:bg-ink-50">
                 <td className="tnum whitespace-nowrap px-3 py-2.5">
-                  {formatDateTime(ride.scheduled_pickup_at)}
+                  {formatDateTime(ride.scheduled_pickup_at, timeZone)}
                 </td>
                 <td className="px-3 py-2.5 font-medium">{ride.passenger_info?.name ?? "—"}</td>
                 <td className="max-w-[10rem] px-3 py-2.5 text-ink-600">
@@ -102,7 +95,7 @@ function RidesTable({ rides }: { rides: Ride[] }) {
                   {ride.attested_at ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-ok-fg/25 bg-ok-bg px-2 py-0.5 text-xs font-medium text-ok-fg">
                       <span className="h-1.5 w-1.5 rounded-full bg-ok-fg" />
-                      {formatDateTime(ride.attested_at)}
+                      {formatDateTime(ride.attested_at, timeZone)}
                     </span>
                   ) : (
                     <span className="text-ink-500">&mdash;</span>
@@ -144,8 +137,8 @@ function RidesTable({ rides }: { rides: Ride[] }) {
  * - mode "any": pick any of the agency's drivers (scheduler reports page).
  * Fetched through the BFF proxy so the tenant cookie/header always applies.
  */
-export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
-  const [month, setMonth] = useState(currentMonthKey());
+export function DriverRideReport({ mode, timeZone }: { mode: "self" | "any"; timeZone: string }) {
+  const [month, setMonth] = useState(() => currentMonthKey(timeZone));
   const [drivers, setDrivers] = useState<DriverOption[]>([]);
   const [driverId, setDriverId] = useState("");
   const [report, setReport] = useState<Report | null>(null);
@@ -282,7 +275,7 @@ export function DriverRideReport({ mode }: { mode: "self" | "any" }) {
             </Card>
             <Card><Stat label="Mileage claimed" value={`${report.summary.mileage_claimed_miles ?? report.summary.mileage_claimed ?? 0} mi`} /></Card>
           </div>
-          <RidesTable rides={report.rides} />
+          <RidesTable rides={report.rides} timeZone={timeZone} />
 
           {mode === "self" && (
             <div className="mt-6 rounded-xl border border-bad-fg/30 bg-bad-bg p-5">

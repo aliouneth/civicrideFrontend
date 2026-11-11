@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { apiFetch, type CursorPage, type Ride } from "@/lib/api";
+import { currentMonthKey } from "@/lib/format";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { CompletedRidesTable } from "./_components/CompletedRidesTable";
@@ -9,13 +10,6 @@ import { CompletedRidesTable } from "./_components/CompletedRidesTable";
 export const metadata: Metadata = { title: "Completed rides" };
 
 const MONTH_RE = /^\d{4}-\d{2}$/;
-
-// Current month as "YYYY-MM" (UTC: near month boundaries the driver's webzone
-// may still be the previous month, but the picker lets them choose any month).
-function currentMonthKey(): string {
-  const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
-}
 
 function monthLabel(key: string): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -35,7 +29,7 @@ export default async function DriverHistoryPage({
   if (!session) redirect("/login");
 
   const { month, cursor } = await searchParams;
-  const selected = month && MONTH_RE.test(month) ? month : currentMonthKey();
+  const selected = month && MONTH_RE.test(month) ? month : currentMonthKey(session.timezone);
   const cursorParam = cursor ? `&cursor=${encodeURIComponent(cursor)}` : "";
 
   const history = await apiFetch<CursorPage<Ride>>(
@@ -59,7 +53,7 @@ export default async function DriverHistoryPage({
         <Button>Show</Button>
       </form>
 
-      <CompletedRidesTable rides={history?.data ?? []} />
+      <CompletedRidesTable rides={history?.data ?? []} timeZone={session.timezone} />
 
       {history?.next_cursor && (
         <a

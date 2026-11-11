@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { currentDateKey } from "@/lib/format";
 
 interface Metrics {
   by_status: Record<string, number>;
@@ -11,8 +12,8 @@ interface Metrics {
 }
 
 // Client island: date range → metrics table + async export with polling.
-export function ReportsPanel() {
-  const today = new Date().toISOString().slice(0, 10);
+export function ReportsPanel({ timeZone }: { timeZone: string }) {
+  const today = currentDateKey(timeZone);
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
