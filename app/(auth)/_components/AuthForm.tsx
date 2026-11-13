@@ -108,7 +108,6 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   async function submit(form: FormData) {
     setSaving(true);
-    setFieldErrors({});
     setFormError(null);
 
     const formTenant = mode === "register" ? agencySlug.trim() : "";
