@@ -238,7 +238,9 @@ export function RideCreateForm({
             Round trip booked: outbound ride #{createdPair.outbound} plus return ride #{createdPair.ret}
             {createdPair.returnAt ? ` (back at ${createdPair.returnAt})` : ""}.
           </p>
-          <p className="mt-1 text-sm text-ink-500">Each leg needs its own driver — assign them both.</p>
+          <p className="mt-1 text-sm text-ink-500">
+            Assigning the outbound also books the same driver for the return leg. You can still change the return separately.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link href={`/rides/${createdPair.outbound}/assign`}>
               <Button variant="accent">Assign outbound #{createdPair.outbound}</Button>

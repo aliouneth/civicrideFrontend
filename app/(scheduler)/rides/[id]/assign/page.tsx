@@ -99,6 +99,11 @@ export default async function AssignPage({ params }: { params: Promise<{ id: str
       <div>
         <Card>
           <h2 className="font-semibold">Assign a driver</h2>
+          {ride.return_ride && (
+            <p className="mt-1 text-sm text-ink-500">
+              Assigning this ride also books the same driver for return leg #{ride.return_ride.id}.
+            </p>
+          )}
           {["pending", "assigned", "en_route"].includes(ride.status.code) && (
             <div className="mb-4 border-b border-line pb-4">
               <CancelRideButton rideId={ride.id} />
