@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -18,22 +18,50 @@ export function ExecutionControls({
   rideId,
   statusCode,
   canStart = true,
+  gpsDistanceMiles = null,
 }: {
   rideId: number;
   statusCode: string;
   canStart?: boolean;
+  gpsDistanceMiles?: number | null;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [incident, setIncident] = useState("");
-  const [mileageClaimed, setMileageClaimed] = useState("");
+  const [mileageClaimed, setMileageClaimed] = useState(gpsDistanceMiles != null && gpsDistanceMiles > 0 ? String(gpsDistanceMiles) : "");
   const [error, setError] = useState<string | null>(null);
 
   // Cancellation dialog state
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasons, setCancelReasons] = useState<Array<{ value: string; label: string }>>([]);
+  const lastPositionSent = useRef<{ lat: number; lng: number; at: number } | null>(null);
+  const mileageEdited = useRef(false);
+
+  useEffect(() => {
+    if (!(statusCode === "en_route" || statusCode === "at_pickup" || statusCode === "transporting")) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    let active = true;
+    const watch = navigator.geolocation.watchPosition((position) => {
+      if (!active) return;
+      const { latitude, longitude, accuracy } = position.coords;
+      const nowMs = Date.now();
+      const last = lastPositionSent.current;
+      if (last && nowMs - last.at < 30000 && Math.abs(last.lat - latitude) + Math.abs(last.lng - longitude) < 0.0002) return;
+      lastPositionSent.current = { lat: latitude, lng: longitude, at: nowMs };
+      void fetch("/api/drivers/me/location", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ride_id: rideId, latitude, longitude, accuracy_meters: accuracy, recorded_at: new Date(position.timestamp).toISOString() }),
+      }).then(async (response) => {
+        if (!response.ok) return;
+        const body = await response.json();
+        if (!mileageEdited.current && body.gps_distance_miles != null && body.gps_distance_miles > 0) setMileageClaimed(String(body.gps_distance_miles));
+      }).catch(() => {});
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+    return () => { active = false; navigator.geolocation.clearWatch(watch); };
+  }, [rideId, statusCode]);
 
   // Fetch cancellation reasons on mount
   useEffect(() => {
@@ -183,8 +211,8 @@ export function ExecutionControls({
           min={0}
           required
           value={mileageClaimed}
-          onChange={(e) => setMileageClaimed(e.target.value)}
-          hint="Miles claimed for this ride."
+          onChange={(e) => { mileageEdited.current = true; setMileageClaimed(e.target.value); }}
+          hint={gpsDistanceMiles != null ? `GPS tracked ${gpsDistanceMiles} mi so far. Adjust if needed before submitting.` : "GPS tracking will suggest the distance once location updates are available."}
         />
       )}
 

@@ -99,7 +99,7 @@ export function DriversGrid({ drivers }: { drivers: DriverListItem[] }) {
       <div className="rounded-2xl border border-line bg-card p-10 text-center">
         <p className="text-sm font-semibold text-ink-900">No drivers found</p>
         <p className="mt-1 text-sm text-ink-500">
-          Drivers appear here once they've registered and applied to your agency.
+          Drivers appear here once they&apos;ve registered and applied to your agency.
         </p>
       </div>
     );

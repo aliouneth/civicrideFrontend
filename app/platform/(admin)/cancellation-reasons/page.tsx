@@ -154,7 +154,7 @@ export default function CancellationReasonsPage() {
         {loading ? (
           <div className="p-8 text-center text-ink-500">Loading…</div>
         ) : reasons.length === 0 ? (
-          <div className="p-8 text-center text-ink-500">No cancellation reasons yet. Click "Add reason" to create one.</div>
+          <div className="p-8 text-center text-ink-500">No cancellation reasons yet. Click &quot;Add reason&quot; to create one.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full" role="grid">

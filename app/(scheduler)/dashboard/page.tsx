@@ -12,6 +12,7 @@ import { ViewModePicker } from "./_components/ViewModePicker";
 import { BoardFilters } from "./_components/BoardFilters";
 import { CalendarView } from "./_components/CalendarView";
 import { RidesTable } from "./_components/RidesTable";
+import { LiveDriverLocations } from "./_components/LiveDriverLocations";
 
 export const metadata: Metadata = { title: "Dispatch board" };
 
@@ -108,6 +109,8 @@ export default async function SchedulerDashboard({
       <div className="mt-4">
         <BoardFilters state={{ by: grouping, q, unassigned, seriesOnly, days, pastDays, includeCompleted, startDate, endDate }} />
       </div>
+
+      <LiveDriverLocations />
 
       <p className="tnum mt-3 text-sm text-ink-500" role="status">
         {board.total} ride(s){hasDateRange

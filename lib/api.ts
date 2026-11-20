@@ -214,6 +214,8 @@ export interface Ride {
   assignments?: Assignment[];
   /** Driver home → pickup → drop-off → home, miles; null until a driver with a home base is assigned. */
   total_distance_miles?: number | null;
+  /** Distance accumulated from accurate GPS samples during the active trip. */
+  gps_distance_miles?: number | null;
   /** When the driver attested this trip in their monthly report; null until attested. */
   attested_at?: string | null;
 }

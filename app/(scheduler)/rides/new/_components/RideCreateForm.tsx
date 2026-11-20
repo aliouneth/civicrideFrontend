@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -90,7 +90,9 @@ export function RideCreateForm({
   const [tripType, setTripType] = useState<"one_way" | "roundtrip">(defaults?.trip_type ?? "one_way");
   const [splitMode, setSplitMode] = useState<"one" | "split">("one");
   const [createdPair, setCreatedPair] = useState<{ outbound: number; ret: number; returnAt: string } | null>(null);
-  const [geoTimers, setGeoTimers] = useState<Record<string, NodeJS.Timeout>>({});
+  const geoTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const geoSequence = useRef<Record<string, number>>({});
+  const [geoStatus, setGeoStatus] = useState<Record<string, string>>({});
 
   // Edit context: a linked return leg locks the trip type, and a return leg
   // itself is steered from its outbound ride.
@@ -108,26 +110,37 @@ export function RideCreateForm({
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const triggerGeocode = useCallback((field: "pickup" | "dropoff", address: string) => {
-    const timer = geoTimers[field];
+  const handleAddressChange = (field: "pickup" | "dropoff", address: string) => {
+    setFormValues((prev) => ({ ...prev, [`${field}_address`]: address, [`${field}_lat`]: "", [`${field}_lng`]: "" }));
+    setGeoStatus((prev) => ({ ...prev, [field]: address.trim() ? "Coordinates will be found automatically." : "" }));
+    triggerGeocode(field, address);
+  };
+
+  function triggerGeocode(field: "pickup" | "dropoff", address: string) {
+    const timer = geoTimers.current[field];
     if (timer) clearTimeout(timer);
+    const sequence = (geoSequence.current[field] ?? 0) + 1;
+    geoSequence.current[field] = sequence;
+    if (!address.trim()) return;
+    setGeoStatus((prev) => ({ ...prev, [field]: "Finding coordinates…" }));
     const newTimer = setTimeout(async () => {
       const coords = await geocode(address);
+      if (geoSequence.current[field] !== sequence) return;
       if (coords) {
+        setFormValues((prev) => ({ ...prev, [`${field}_lat`]: coords.lat, [`${field}_lng`]: coords.lng }));
+        setGeoStatus((prev) => ({ ...prev, [field]: `Coordinates saved: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` }));
         setFieldErrors((prev) => {
           const next = { ...prev };
           delete next[`${field}_lat`];
           delete next[`${field}_lng`];
           return next;
         });
-        // We need to update the form fields - easiest is to dispatch a custom event
-        window.dispatchEvent(new CustomEvent("geocode-result", {
-          detail: { field, lat: coords.lat, lng: coords.lng }
-        }));
+      } else {
+        setGeoStatus((prev) => ({ ...prev, [field]: "Could not find this address. Check it and try again." }));
       }
     }, 500);
-    setGeoTimers((prev) => ({ ...prev, [field]: newTimer }));
-  }, [geoTimers]);
+    geoTimers.current[field] = newTimer;
+  }
 
   async function submit(form: FormData) {
     setSaving(true);
@@ -135,6 +148,19 @@ export function RideCreateForm({
     setFormError(null);
 
     const raw = Object.fromEntries(form.entries());
+    const [pickupCoordinates, dropoffCoordinates] = await Promise.all([
+      geocode(String(raw.pickup_address ?? "")),
+      geocode(String(raw.dropoff_address ?? "")),
+    ]);
+    const pickupLat = pickupCoordinates?.lat ?? Number(raw.pickup_lat);
+    const pickupLng = pickupCoordinates?.lng ?? Number(raw.pickup_lng);
+    const dropoffLat = dropoffCoordinates?.lat ?? Number(raw.dropoff_lat);
+    const dropoffLng = dropoffCoordinates?.lng ?? Number(raw.dropoff_lng);
+    if (![pickupLat, pickupLng, dropoffLat, dropoffLng].every(Number.isFinite)) {
+      setSaving(false);
+      setFormError("We could not find coordinates for an address. Check the address and try again.");
+      return;
+    }
     const payload: Record<string, unknown> = {
       passenger_info: {
         name: raw.passenger_name, phone: raw.passenger_phone,
@@ -142,8 +168,8 @@ export function RideCreateForm({
         destination_phone: raw.destination_phone || null,
         wheelchair: raw.wheelchair === "on", child_seat: raw.child_seat === "on",
       },
-      pickup_address: raw.pickup_address, pickup_lat: Number(raw.pickup_lat), pickup_lng: Number(raw.pickup_lng),
-      dropoff_address: raw.dropoff_address, dropoff_lat: Number(raw.dropoff_lat), dropoff_lng: Number(raw.dropoff_lng),
+      pickup_address: raw.pickup_address, pickup_lat: pickupLat, pickup_lng: pickupLng,
+      dropoff_address: raw.dropoff_address, dropoff_lat: dropoffLat, dropoff_lng: dropoffLng,
       scheduled_pickup_at: raw.scheduled_pickup_at, notes: raw.notes || null,
     };
 
@@ -217,19 +243,6 @@ export function RideCreateForm({
   const err = (n: string) => fieldErrors[n]?.[0];
   const recurErr = (n: string) => fieldErrors[`recurrence.${n}`]?.[0];
 
-  // Listen for geocode results and populate lat/lng fields
-  useEffect(() => {
-    function onGeo(e: CustomEvent) {
-      const { field, lat, lng } = e.detail;
-      const latInput = document.querySelector<HTMLInputElement>(`input[name="${field}_lat"]`);
-      const lngInput = document.querySelector<HTMLInputElement>(`input[name="${field}_lng"]`);
-      if (latInput) { latInput.value = String(lat); latInput.dispatchEvent(new Event("change", { bubbles: true })); }
-      if (lngInput) { lngInput.value = String(lng); lngInput.dispatchEvent(new Event("change", { bubbles: true })); }
-    }
-    window.addEventListener("geocode-result", onGeo as EventListener);
-    return () => window.removeEventListener("geocode-result", onGeo as EventListener);
-  }, []);
-
   return (
     <form action={submit} className="grid gap-4 md:grid-cols-2" noValidate>
       {createdPair && (
@@ -266,9 +279,10 @@ export function RideCreateForm({
         value={formValues.scheduled_pickup_at ?? ""} onChange={(e) => handleChange("scheduled_pickup_at", e.target.value)}
         hint="Agency local time." required />
       <Input name="pickup_address" label="Pickup address" error={err("pickup_address")}
-        value={formValues.pickup_address ?? ""} onChange={(e) => handleChange("pickup_address", e.target.value)}
+        value={formValues.pickup_address ?? ""} onChange={(e) => handleAddressChange("pickup", e.target.value)}
         className="md:col-span-2" required
         onBlur={(e) => triggerGeocode("pickup", e.currentTarget.value)} />
+      {geoStatus.pickup && <p className="-mt-3 text-xs text-ink-500 md:col-span-2" role="status">{geoStatus.pickup}</p>}
       <Input name="pickup_lat" type="number" step="any" label="Pickup latitude" error={err("pickup_lat")}
         value={formValues.pickup_lat ?? ""} onChange={(e) => handleChange("pickup_lat", e.target.value)}
         className="hidden" required />
@@ -276,9 +290,10 @@ export function RideCreateForm({
         value={formValues.pickup_lng ?? ""} onChange={(e) => handleChange("pickup_lng", e.target.value)}
         className="hidden" required />
       <Input name="dropoff_address" label="Drop-off address" error={err("dropoff_address")}
-        value={formValues.dropoff_address ?? ""} onChange={(e) => handleChange("dropoff_address", e.target.value)}
+        value={formValues.dropoff_address ?? ""} onChange={(e) => handleAddressChange("dropoff", e.target.value)}
         className="md:col-span-2" required
         onBlur={(e) => triggerGeocode("dropoff", e.currentTarget.value)} />
+      {geoStatus.dropoff && <p className="-mt-3 text-xs text-ink-500 md:col-span-2" role="status">{geoStatus.dropoff}</p>}
       <Input name="dropoff_lat" type="number" step="any" label="Drop-off latitude" error={err("dropoff_lat")}
         value={formValues.dropoff_lat ?? ""} onChange={(e) => handleChange("dropoff_lat", e.target.value)}
         className="hidden" required />

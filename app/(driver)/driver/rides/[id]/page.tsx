@@ -108,7 +108,7 @@ export default async function DriverRidePage({ params }: { params: Promise<{ id:
             <div className="flex gap-2"><dt className="w-16 shrink-0 font-semibold text-ink-500">Distance</dt><dd className="tnum">{ride.total_distance_miles} mi</dd></div>
           )}
         </dl>
-        <ExecutionControls rideId={ride.id} statusCode={ride.status.code} canStart={isScheduledToday(ride.scheduled_pickup_at, session.timezone)} />
+        <ExecutionControls rideId={ride.id} statusCode={ride.status.code} canStart={isScheduledToday(ride.scheduled_pickup_at, session.timezone)} gpsDistanceMiles={ride.gps_distance_miles ?? null} />
       </Card>
 
 
