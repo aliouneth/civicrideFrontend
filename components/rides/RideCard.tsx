@@ -26,7 +26,7 @@ export function RideCard({ ride, href, timeZone, hideActions }: {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-2xl">{ride.passenger_info.name}</p>
-          <p className="tnum text-2xl text-ink-500">{formatDateTime(ride.scheduled_pickup_at, timeZone)}</p>
+          <p className="tnum text-2xl text-ink-500 whitespace-nowrap">{formatDateTime(ride.scheduled_pickup_at, timeZone)}</p>
         </div>
         <StatusBadge code={ride.status.code} />
       </div>
