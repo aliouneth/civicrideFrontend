@@ -5,8 +5,8 @@ import { displayTimezone } from "./timezone";
 // the session so a render on the server (UTC) never leaks into the page.
 export function formatDateTime(iso: string, timeZone = displayTimezone()): string {
   return new Intl.DateTimeFormat("en-US", {
-    timeZone, month: "short", day: "numeric",
-    hour: "numeric", minute: "2-digit",
+    timeZone, weekday: "short", month: "short", day: "numeric",
+    hour: "numeric", minute: "2-digit", hour12: true,
   }).format(new Date(iso));
 }
 
