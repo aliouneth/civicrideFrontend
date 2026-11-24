@@ -4,10 +4,6 @@ const footerLinks = {
   product: [
     { label: "Features", href: "#features" },
     { label: "How It Works", href: "#how-it-works" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "API Docs", href: "/docs" },
-    { label: "Integrations", href: "/integrations" },
-    { label: "Changelog", href: "/changelog" },
   ],
   company: [
     { label: "About Us", href: "#about" },
@@ -19,18 +15,13 @@ const footerLinks = {
   ],
   resources: [
     { label: "Help Center", href: "/help" },
-    { label: "API Reference", href: "/docs/api" },
-    { label: "Community Forum", href: "/community" },
-    { label: "Webinars", href: "/webinars" },
-    { label: "Case Studies", href: "/case-studies" },
-    { label: "Security", href: "/security" },
+    { label: "Cookie Policy", href: "/cookie-policy" },
+    { label: "SOC 2 Report", href: "/soc2-report" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
-    { label: "Cookie Policy", href: "/cookies" },
     { label: "HIPAA", href: "/hipaa" },
-    { label: "SOC 2 Report", href: "/soc2" },
   ],
 };
 
@@ -46,24 +37,23 @@ export function Footer() {
   return (
     <footer className="bg-ink-900 text-white" role="contentinfo">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2">
             <p className="text-ink-300 text-base leading-relaxed max-w-xs mb-6">
               With you along the way. Building smarter, cleaner, more equitable transit
               for every community.
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-2">
               <a
                 href="mailto:contact@civicride.com"
-                className="text-ink-400 hover:text-white transition-colors text-sm"
+                className="text-brand-400 hover:text-white font-bold text-lg"
               >
                 contact@civicride.com
               </a>
-              <span className="text-ink-600">|</span>
               <a
                 href="tel:+19203831918"
-                className="text-ink-400 hover:text-white transition-colors text-sm"
+                className="text-brand-400 hover:text-white font-bold text-lg"
               >
                 +1 (920) 383-1918
               </a>
