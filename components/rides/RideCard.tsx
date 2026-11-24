@@ -25,34 +25,34 @@ export function RideCard({ ride, href, timeZone, hideActions }: {
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">{ride.passenger_info.name}</p>
-          <p className="tnum text-sm text-ink-500">{formatDateTime(ride.scheduled_pickup_at, timeZone)}</p>
+          <p className="font-semibold text-2xl">{ride.passenger_info.name}</p>
+          <p className="tnum text-2xl text-ink-500">{formatDateTime(ride.scheduled_pickup_at, timeZone)}</p>
         </div>
         <StatusBadge code={ride.status.code} />
       </div>
-      <SeriesChip ride={ride} className="mt-2" />
+      <SeriesChip ride={ride} className="mt-2 text-xl" />
       {ride.trip_type === "roundtrip" && (
-        <p className="tnum mt-2 text-xs font-semibold text-brand-800">
+        <p className="tnum mt-2 text-2xl font-semibold text-brand-800">
           ⇄ Round trip{ride.return_pickup_at ? ` · back ${formatDateTime(ride.return_pickup_at, timeZone)}` : ""}
         </p>
       )}
 
-      <dl className="mt-3 space-y-1 text-sm">
+      <dl className="mt-3 space-y-1">
         <div className="flex gap-2">
-          <dt className="w-14 shrink-0 font-semibold text-ink-500">From</dt>
-          <dd>{ride.pickup_address}</dd>
+          <dt className="w-14 shrink-0 font-semibold text-2xl text-ink-500">From</dt>
+          <dd className="line-clamp-2">{ride.pickup_address}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="w-14 shrink-0 font-semibold text-ink-500">To</dt>
-          <dd>{ride.dropoff_address}</dd>
+          <dt className="w-14 shrink-0 font-semibold text-2xl text-ink-500">To</dt>
+          <dd className="line-clamp-2">{ride.dropoff_address}</dd>
         </div>
       </dl>
 
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3 text-sm">
-        <span className="text-ink-500">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
+        <span className="text-2xl text-ink-500">
           {ride.active_assignment?.driver?.user?.name ?? "Unassigned"}
         </span>
-        <span className="tnum font-semibold">{formatMoney(ride.price_cents)}</span>
+        <span className="tnum font-semibold text-2xl">{formatMoney(ride.price_cents)}</span>
       </div>
 
       {/* relative + z-10 keeps these clickable above the stretched overlay */}
