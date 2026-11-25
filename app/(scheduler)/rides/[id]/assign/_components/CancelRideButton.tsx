@@ -16,7 +16,7 @@ export function CancelRideButton({ rideId }: { rideId: number }) {
     await fetch(`/api/rides/${rideId}/transition`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to_code: "cancelled", reason: "Cancelled by dispatcher" }),
+      body: JSON.stringify({ to_code: "cancelled", reason: "other" }),
     });
     setSaving(false);
     setOpen(false);

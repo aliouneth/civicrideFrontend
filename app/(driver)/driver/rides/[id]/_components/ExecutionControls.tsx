@@ -34,6 +34,7 @@ export function ExecutionControls({
 
   // Cancellation dialog state
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasons, setCancelReasons] = useState<Array<{ value: string; label: string }>>([]);
   const lastPositionSent = useRef<{ lat: number; lng: number; at: number } | null>(null);
@@ -90,7 +91,10 @@ export function ExecutionControls({
     (a) => a.to !== "en_route" || canStart,
   );
   const backAction = previousDriverAction(statusCode);
-  const showCancelButton = ["assigned", "en_route", "at_pickup", "transporting"].includes(statusCode);
+  // A driver rejects an assignment while it is still `assigned`; once the ride
+  // is under way the driver cancels instead (rejecting no longer makes sense).
+  const canReject = statusCode === "assigned";
+  const showCancelButton = ["en_route", "at_pickup", "transporting"].includes(statusCode);
 
   async function getLocation(): Promise<{ lat?: number; lng?: number }> {
     if (typeof navigator === "undefined" || !navigator.geolocation) return {};
@@ -177,6 +181,32 @@ export function ExecutionControls({
     advance("cancelled", { reason: cancelReason });
   }
 
+  // Reject an assignment: the ride returns to the dispatch board as unassigned
+  // and dispatch is notified by the backend status broadcast. The driver no
+  // longer has this ride, so send them back to their ride list.
+  async function rejectAssignment() {
+    setSaving("unassigned");
+    setError(null);
+    try {
+      const res = await fetch(`/api/rides/${rideId}/transition`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to_code: "unassigned", reason: "Rejected by driver" }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.errors?.to_code?.[0] ?? body?.message ?? "Could not reject the assignment.");
+      }
+      setShowRejectDialog(false);
+      router.push("/driver");
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not reject the assignment.");
+    } finally {
+      setSaving(null);
+    }
+  }
+
   // Only show execution controls for non-terminal states
   const isTerminal = ["completed", "cancelled"].includes(statusCode);
   if (isTerminal && !showCancelButton) return null;
@@ -243,6 +273,32 @@ export function ExecutionControls({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Reject assignment (drivers only, while the ride is still assigned) */}
+      {canReject && (
+        <>
+          <Button
+            variant="danger"
+            loading={saving === "unassigned"}
+            onClick={() => setShowRejectDialog(true)}
+            className="w-full text-lg border-bad-fg/25"
+          >
+            Reject Assignment
+          </Button>
+
+          {showRejectDialog && (
+            <Modal
+              title="Reject this assignment?"
+              body="The ride returns to the dispatch board as unassigned and the dispatcher is notified. This cannot be undone."
+              confirmLabel="Yes, reject assignment"
+              cancelLabel="Keep assignment"
+              onConfirm={rejectAssignment}
+              onClose={() => setShowRejectDialog(false)}
+              confirming={saving === "unassigned"}
+            />
+          )}
+        </>
       )}
 
       {/* Cancel button with confirmation dialog */}

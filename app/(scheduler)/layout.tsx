@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { NavLinks, type NavLink } from "@/components/ui/NavLinks";
 import { Logo } from "@/components/ui/Logo";
 import { LogoutButton } from "@/components/ui/LogoutButton";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 // Scheduler shell: navy brand rail on desktop, white tab bar on mobile.
 // Drivers are sent to /driver.
@@ -43,6 +44,9 @@ export default async function SchedulerLayout({ children }: { children: React.Re
         <div className="flex items-center gap-2 border-b border-line px-4 py-3">
           <Logo height={28} priority />
           <span className="truncate text-sm font-semibold text-ink-500">{user.name}</span>
+          <div className="ml-auto">
+            <NotificationBell />
+          </div>
         </div>
         <nav aria-label="Scheduler" className="flex gap-1 overflow-x-auto p-2">
           <NavLinks links={links} variant="tabs" />
@@ -58,7 +62,10 @@ export default async function SchedulerLayout({ children }: { children: React.Re
           )}
         </Link>
 
-        <p className="mt-4 truncate px-2 text-sm text-white/70">{user.name}</p>
+        <div className="mt-4 flex items-center justify-between gap-2 px-2">
+          <p className="truncate text-sm text-white/70">{user.name}</p>
+          <NotificationBell onBrand align="left" />
+        </div>
 
         <nav aria-label="Scheduler" className="mt-4 space-y-1">
           <NavLinks links={links} />

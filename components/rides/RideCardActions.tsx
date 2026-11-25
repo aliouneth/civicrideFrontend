@@ -12,9 +12,19 @@ interface Props {
   passengerName: string;
 }
 
+/**
+ * Dispatch/agency actions only. Drivers never render this component — the
+ * "Reject Assignment" action belongs to the driver execution UI.
+ */
+
 /** Mirrors the server guards in UpdateRideRequest / RideTransitionService. */
 const EDITABLE = ["pending", "assigned"];
+
+/** Upcoming rides a dispatcher may still cancel (not yet picked up). */
 const CANCELLABLE = ["pending", "assigned", "en_route"];
+
+/** Active cancellation reason code; the API rejects arbitrary strings. */
+const CANCEL_REASON = "other";
 
 export function RideCardActions({ rideId, statusCode, passengerName }: Props) {
   const router = useRouter();
@@ -32,7 +42,7 @@ export function RideCardActions({ rideId, statusCode, passengerName }: Props) {
     const res = await fetch(`/api/rides/${rideId}/transition`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to_code: "cancelled", reason: "Cancelled by dispatcher" }),
+      body: JSON.stringify({ to_code: "cancelled", reason: CANCEL_REASON }),
     });
 
     if (!res.ok) {
@@ -74,6 +84,7 @@ export function RideCardActions({ rideId, statusCode, passengerName }: Props) {
         {canCancel && (
           <Button variant="dangerOutline" onClick={() => setConfirming(true)}>Cancel</Button>
         )}
+
       </div>
 
       {!canEdit && !canCancel && (
