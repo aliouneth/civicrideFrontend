@@ -56,7 +56,7 @@ async function DriverDashboardContent({
     <div className="relative">
       {/* Page-only background: covers the full viewport without tinting other
           driver screens, which keep the neutral paper surface from the shell. */}
-      <div aria-hidden className="fixed inset-0 -z-10 bg-brand-300" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-brand-500" />
 
       {!hasWork ? (
         <div className="mt-4">
@@ -69,7 +69,7 @@ async function DriverDashboardContent({
         <>
           {nowRide && (
             <section className="mt-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-900">Now</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-white">Now</h2>
               <div className="mt-2">
                 <RideCard ride={nowRide} href={`/driver/rides/${nowRide.id}`} timeZone={timeZone} hideActions />
               </div>
@@ -78,7 +78,7 @@ async function DriverDashboardContent({
 
           {todayList.length > 0 && (
             <section className="mt-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-900">Today</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-white">Today</h2>
               <div className="mt-2 space-y-3">
                 {todayList.map((ride) => (
                   <RideCard key={ride.id} ride={ride} href={`/driver/rides/${ride.id}`} timeZone={timeZone} hideActions />
@@ -89,7 +89,7 @@ async function DriverDashboardContent({
 
           {laterRides.length > 0 && (
             <section className="mt-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-900">Upcoming</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-white">Upcoming</h2>
               <div className="mt-2 space-y-3">
                 {laterRides.map((ride) => (
                   <RideCard key={ride.id} ride={ride} href={`/driver/rides/${ride.id}`} timeZone={timeZone} hideActions />
