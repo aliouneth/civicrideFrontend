@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/Textarea";
 /** Wisconsin fire-number pattern: E#### or W#### followed by road name */
 const WI_FIRE_NUMBER_PATTERN = /^([EW])(\d{3,5})\s+(.+)/i;
 
+/** Provider/network failure: distinct from "no match for this address". */
+class GeocodingUnavailable extends Error {}
+
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   if (!address.trim()) return null;
 
@@ -34,6 +37,7 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
 
   try {
     const res = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`);
+    if (res.status === 503) throw new GeocodingUnavailable();
     if (!res.ok) return null;
     const data = await res.json();
     if (data && typeof data.lat === "number" && typeof data.lng === "number") {
@@ -124,19 +128,29 @@ export function RideCreateForm({
     if (!address.trim()) return;
     setGeoStatus((prev) => ({ ...prev, [field]: "Finding coordinates…" }));
     const newTimer = setTimeout(async () => {
-      const coords = await geocode(address);
-      if (geoSequence.current[field] !== sequence) return;
-      if (coords) {
-        setFormValues((prev) => ({ ...prev, [`${field}_lat`]: coords.lat, [`${field}_lng`]: coords.lng }));
-        setGeoStatus((prev) => ({ ...prev, [field]: `Coordinates saved: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` }));
-        setFieldErrors((prev) => {
-          const next = { ...prev };
-          delete next[`${field}_lat`];
-          delete next[`${field}_lng`];
-          return next;
-        });
-      } else {
-        setGeoStatus((prev) => ({ ...prev, [field]: "Could not find this address. Check it and try again." }));
+      try {
+        const coords = await geocode(address);
+        if (geoSequence.current[field] !== sequence) return;
+        if (coords) {
+          setFormValues((prev) => ({ ...prev, [`${field}_lat`]: coords.lat, [`${field}_lng`]: coords.lng }));
+          setGeoStatus((prev) => ({ ...prev, [field]: `Coordinates saved: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` }));
+          setFieldErrors((prev) => {
+            const next = { ...prev };
+            delete next[`${field}_lat`];
+            delete next[`${field}_lng`];
+            return next;
+          });
+        } else {
+          setGeoStatus((prev) => ({ ...prev, [field]: "Could not find this address. Check it and try again." }));
+        }
+      } catch (error) {
+        if (geoSequence.current[field] !== sequence) return;
+        setGeoStatus((prev) => ({
+          ...prev,
+          [field]: error instanceof GeocodingUnavailable
+            ? "Address lookup is temporarily unavailable. Try again shortly."
+            : "Could not look up coordinates. Try again.",
+        }));
       }
     }, 500);
     geoTimers.current[field] = newTimer;
@@ -149,8 +163,8 @@ export function RideCreateForm({
 
     const raw = Object.fromEntries(form.entries());
     const [pickupCoordinates, dropoffCoordinates] = await Promise.all([
-      geocode(String(raw.pickup_address ?? "")),
-      geocode(String(raw.dropoff_address ?? "")),
+      geocode(String(raw.pickup_address ?? "")).catch(() => null),
+      geocode(String(raw.dropoff_address ?? "")).catch(() => null),
     ]);
     const pickupLat = pickupCoordinates?.lat ?? Number(raw.pickup_lat);
     const pickupLng = pickupCoordinates?.lng ?? Number(raw.pickup_lng);
@@ -158,7 +172,7 @@ export function RideCreateForm({
     const dropoffLng = dropoffCoordinates?.lng ?? Number(raw.dropoff_lng);
     if (![pickupLat, pickupLng, dropoffLat, dropoffLng].every(Number.isFinite)) {
       setSaving(false);
-      setFormError("We could not find coordinates for an address. Check the address and try again.");
+      setFormError("We could not find coordinates for an address. Check it and try again — if the lookup service is unavailable, retry in a moment.");
       return;
     }
     const payload: Record<string, unknown> = {
