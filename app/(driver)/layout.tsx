@@ -32,7 +32,7 @@ export default async function DriverLayout({ children }: { children: React.React
 
   return (
     <DriverApprovalProvider isApproved={isApproved}>
-      <div className="mx-auto min-h-dvh max-w-lg bg-paper pb-24">
+      <div className="mx-auto min-h-dvh max-w-lg bg-transparent pb-24">
         <header className="bg-brand-gradient px-4 pt-3 pb-2">
           <div className="flex items-start justify-between gap-3">
             <Link href="/driver" className="flex items-center gap-2 pt-1">

@@ -53,7 +53,11 @@ async function DriverDashboardContent({
   const hasWork = Boolean(nowRide) || todayList.length > 0 || laterRides.length > 0;
 
   return (
-    <div>
+    <div className="relative">
+      {/* Page-only background: covers the full viewport without tinting other
+          driver screens, which keep the neutral paper surface from the shell. */}
+      <div aria-hidden className="fixed inset-0 -z-10 bg-brand-100" />
+
       {!hasWork ? (
         <div className="mt-4">
           <EmptyState
