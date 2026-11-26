@@ -124,10 +124,7 @@ export function RideCreateForm({
   const handleAddressChange = (field: "pickup" | "dropoff", address: string) => {
     delete resolvedAddresses.current[field];
     setFormValues((prev) => ({ ...prev, [`${field}_address`]: address, [`${field}_lat`]: "", [`${field}_lng`]: "" }));
-    setGeoStatus((prev) => ({
-      ...prev,
-      [field]: address.trim() ? "Choose a suggested address, or keep typing — coordinates are checked when you leave the field." : "",
-    }));
+    setGeoStatus((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleAddressSelect = (field: "pickup" | "dropoff", suggestion: AddressSuggestion) => {
@@ -138,10 +135,7 @@ export function RideCreateForm({
       [`${field}_lat`]: suggestion.lat,
       [`${field}_lng`]: suggestion.lng,
     }));
-    setGeoStatus((prev) => ({
-      ...prev,
-      [field]: `Coordinates saved: ${suggestion.lat.toFixed(5)}, ${suggestion.lng.toFixed(5)}`,
-    }));
+    setGeoStatus((prev) => ({ ...prev, [field]: "" }));
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next[`${field}_lat`];
@@ -158,14 +152,13 @@ export function RideCreateForm({
     const sequence = (geoSequence.current[field] ?? 0) + 1;
     geoSequence.current[field] = sequence;
     if (!address.trim()) return;
-    setGeoStatus((prev) => ({ ...prev, [field]: "Finding coordinates…" }));
     const newTimer = setTimeout(async () => {
       try {
         const coords = await geocode(address);
         if (geoSequence.current[field] !== sequence) return;
         if (coords) {
           setFormValues((prev) => ({ ...prev, [`${field}_lat`]: coords.lat, [`${field}_lng`]: coords.lng }));
-          setGeoStatus((prev) => ({ ...prev, [field]: `Coordinates saved: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` }));
+          setGeoStatus((prev) => ({ ...prev, [field]: "" }));
           setFieldErrors((prev) => {
             const next = { ...prev };
             delete next[`${field}_lat`];
@@ -344,7 +337,6 @@ export function RideCreateForm({
         onChange={(value) => handleAddressChange("pickup", value)}
         onSelect={(suggestion) => handleAddressSelect("pickup", suggestion)}
         onBlur={(value) => triggerGeocode("pickup", value)}
-        hint="Start typing to choose a verified address."
         className="md:col-span-2" required />
       {geoStatus.pickup && <p className="-mt-3 text-xs text-ink-500 md:col-span-2" role="status">{geoStatus.pickup}</p>}
       <Input name="pickup_lat" type="number" step="any" label="Pickup latitude" error={err("pickup_lat")}
@@ -358,7 +350,6 @@ export function RideCreateForm({
         onChange={(value) => handleAddressChange("dropoff", value)}
         onSelect={(suggestion) => handleAddressSelect("dropoff", suggestion)}
         onBlur={(value) => triggerGeocode("dropoff", value)}
-        hint="Start typing to choose a verified address."
         className="md:col-span-2" required />
       {geoStatus.dropoff && <p className="-mt-3 text-xs text-ink-500 md:col-span-2" role="status">{geoStatus.dropoff}</p>}
       <Input name="dropoff_lat" type="number" step="any" label="Drop-off latitude" error={err("dropoff_lat")}
