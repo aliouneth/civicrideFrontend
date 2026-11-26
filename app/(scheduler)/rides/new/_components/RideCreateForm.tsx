@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { AddressAutocomplete, type AddressSuggestion } from "@/components/ui/AddressAutocomplete";
 
 /** Wisconsin fire-number pattern: E#### or W#### followed by road name */
 const WI_FIRE_NUMBER_PATTERN = /^([EW])(\d{3,5})\s+(.+)/i;
@@ -96,6 +97,12 @@ export function RideCreateForm({
   const [createdPair, setCreatedPair] = useState<{ outbound: number; ret: number; returnAt: string } | null>(null);
   const geoTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const geoSequence = useRef<Record<string, number>>({});
+  const resolvedAddresses = useRef<Record<string, string>>({
+    ...(defaults?.pickup_address && Number.isFinite(Number(defaults.pickup_lat)) && Number.isFinite(Number(defaults.pickup_lng))
+      ? { pickup: defaults.pickup_address } : {}),
+    ...(defaults?.dropoff_address && Number.isFinite(Number(defaults.dropoff_lat)) && Number.isFinite(Number(defaults.dropoff_lng))
+      ? { dropoff: defaults.dropoff_address } : {}),
+  });
   const [geoStatus, setGeoStatus] = useState<Record<string, string>>({});
 
   // Edit context: a linked return leg locks the trip type, and a return leg
@@ -115,12 +122,37 @@ export function RideCreateForm({
   };
 
   const handleAddressChange = (field: "pickup" | "dropoff", address: string) => {
+    delete resolvedAddresses.current[field];
     setFormValues((prev) => ({ ...prev, [`${field}_address`]: address, [`${field}_lat`]: "", [`${field}_lng`]: "" }));
-    setGeoStatus((prev) => ({ ...prev, [field]: address.trim() ? "Coordinates will be found automatically." : "" }));
-    triggerGeocode(field, address);
+    setGeoStatus((prev) => ({
+      ...prev,
+      [field]: address.trim() ? "Choose a suggested address, or keep typing — coordinates are checked when you leave the field." : "",
+    }));
+  };
+
+  const handleAddressSelect = (field: "pickup" | "dropoff", suggestion: AddressSuggestion) => {
+    resolvedAddresses.current[field] = suggestion.label;
+    setFormValues((prev) => ({
+      ...prev,
+      [`${field}_address`]: suggestion.label,
+      [`${field}_lat`]: suggestion.lat,
+      [`${field}_lng`]: suggestion.lng,
+    }));
+    setGeoStatus((prev) => ({
+      ...prev,
+      [field]: `Coordinates saved: ${suggestion.lat.toFixed(5)}, ${suggestion.lng.toFixed(5)}`,
+    }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[`${field}_lat`];
+      delete next[`${field}_lng`];
+      return next;
+    });
   };
 
   function triggerGeocode(field: "pickup" | "dropoff", address: string) {
+    if (resolvedAddresses.current[field] === address.trim()) return;
+
     const timer = geoTimers.current[field];
     if (timer) clearTimeout(timer);
     const sequence = (geoSequence.current[field] ?? 0) + 1;
@@ -162,9 +194,24 @@ export function RideCreateForm({
     setFormError(null);
 
     const raw = Object.fromEntries(form.entries());
+    const coordinatesFor = async (
+      field: "pickup" | "dropoff",
+      address: string,
+      lat: unknown,
+      lng: unknown,
+    ): Promise<{ lat: number; lng: number } | null> => {
+      const savedLat = Number(lat);
+      const savedLng = Number(lng);
+      if (resolvedAddresses.current[field] === address.trim()
+        && Number.isFinite(savedLat) && Number.isFinite(savedLng)) {
+        return { lat: savedLat, lng: savedLng };
+      }
+
+      return geocode(address).catch(() => null);
+    };
     const [pickupCoordinates, dropoffCoordinates] = await Promise.all([
-      geocode(String(raw.pickup_address ?? "")).catch(() => null),
-      geocode(String(raw.dropoff_address ?? "")).catch(() => null),
+      coordinatesFor("pickup", String(raw.pickup_address ?? ""), raw.pickup_lat, raw.pickup_lng),
+      coordinatesFor("dropoff", String(raw.dropoff_address ?? ""), raw.dropoff_lat, raw.dropoff_lng),
     ]);
     const pickupLat = pickupCoordinates?.lat ?? Number(raw.pickup_lat);
     const pickupLng = pickupCoordinates?.lng ?? Number(raw.pickup_lng);
@@ -292,10 +339,13 @@ export function RideCreateForm({
       <Input name="scheduled_pickup_at" type="datetime-local" label="Scheduled pickup" error={err("scheduled_pickup_at")}
         value={formValues.scheduled_pickup_at ?? ""} onChange={(e) => handleChange("scheduled_pickup_at", e.target.value)}
         hint="Agency local time." required />
-      <Input name="pickup_address" label="Pickup address" error={err("pickup_address")}
-        value={formValues.pickup_address ?? ""} onChange={(e) => handleAddressChange("pickup", e.target.value)}
-        className="md:col-span-2" required
-        onBlur={(e) => triggerGeocode("pickup", e.currentTarget.value)} />
+      <AddressAutocomplete name="pickup_address" label="Pickup address" error={err("pickup_address")}
+        value={formValues.pickup_address ?? ""}
+        onChange={(value) => handleAddressChange("pickup", value)}
+        onSelect={(suggestion) => handleAddressSelect("pickup", suggestion)}
+        onBlur={(value) => triggerGeocode("pickup", value)}
+        hint="Start typing to choose a verified address."
+        className="md:col-span-2" required />
       {geoStatus.pickup && <p className="-mt-3 text-xs text-ink-500 md:col-span-2" role="status">{geoStatus.pickup}</p>}
       <Input name="pickup_lat" type="number" step="any" label="Pickup latitude" error={err("pickup_lat")}
         value={formValues.pickup_lat ?? ""} onChange={(e) => handleChange("pickup_lat", e.target.value)}
@@ -303,10 +353,13 @@ export function RideCreateForm({
       <Input name="pickup_lng" type="number" step="any" label="Pickup longitude" error={err("pickup_lng")}
         value={formValues.pickup_lng ?? ""} onChange={(e) => handleChange("pickup_lng", e.target.value)}
         className="hidden" required />
-      <Input name="dropoff_address" label="Drop-off address" error={err("dropoff_address")}
-        value={formValues.dropoff_address ?? ""} onChange={(e) => handleAddressChange("dropoff", e.target.value)}
-        className="md:col-span-2" required
-        onBlur={(e) => triggerGeocode("dropoff", e.currentTarget.value)} />
+      <AddressAutocomplete name="dropoff_address" label="Drop-off address" error={err("dropoff_address")}
+        value={formValues.dropoff_address ?? ""}
+        onChange={(value) => handleAddressChange("dropoff", value)}
+        onSelect={(suggestion) => handleAddressSelect("dropoff", suggestion)}
+        onBlur={(value) => triggerGeocode("dropoff", value)}
+        hint="Start typing to choose a verified address."
+        className="md:col-span-2" required />
       {geoStatus.dropoff && <p className="-mt-3 text-xs text-ink-500 md:col-span-2" role="status">{geoStatus.dropoff}</p>}
       <Input name="dropoff_lat" type="number" step="any" label="Drop-off latitude" error={err("dropoff_lat")}
         value={formValues.dropoff_lat ?? ""} onChange={(e) => handleChange("dropoff_lat", e.target.value)}
