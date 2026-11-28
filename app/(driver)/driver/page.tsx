@@ -14,8 +14,8 @@ export const metadata: Metadata = { title: "Jobs" };
 
 // Rides the driver still has to work. Terminal rides (completed/cancelled)
 // belong to the history view, not to the job list.
-const OPEN_STATUSES = ["assigned", "en_route", "at_pickup", "transporting"];
-const IN_PROGRESS_STATUSES = ["en_route", "at_pickup", "transporting"];
+const OPEN_STATUSES = ["assigned", "en_route", "at_pickup", "transporting", "at_destination"];
+const IN_PROGRESS_STATUSES = ["en_route", "at_pickup", "transporting", "at_destination"];
 
 // Driver home: today's job list, then claimable jobs (when agency allows).
 async function DriverDashboardContent({
