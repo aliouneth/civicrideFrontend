@@ -10,8 +10,8 @@ import { Modal } from "@/components/ui/Modal";
 import { nextDriverActions, previousDriverAction } from "@/lib/ride-status";
 import { apiFetch } from "@/lib/api";
 
-// Driver execution leaf: exactly one primary action per state (Start →
-// Pickup → Drop-off), big touch targets, optional note/incident attached.
+// Driver execution leaf: one primary action per state (Start → Pickup →
+// Transport → At destination → End), big touch targets, optional note/incident.
 // `canStart` is false when the ride is scheduled for another day — the backend
 // refuses that transition too, this just makes it visible up front.
 export function ExecutionControls({
@@ -41,7 +41,7 @@ export function ExecutionControls({
   const mileageEdited = useRef(false);
 
   useEffect(() => {
-    if (!(statusCode === "en_route" || statusCode === "at_pickup" || statusCode === "transporting")) return;
+    if (!(statusCode === "en_route" || statusCode === "at_pickup" || statusCode === "transporting" || statusCode === "at_destination")) return;
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
     let active = true;
     const watch = navigator.geolocation.watchPosition((position) => {

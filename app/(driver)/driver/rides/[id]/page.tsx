@@ -41,7 +41,7 @@ function AddressLine({
   );
 }
 
-// Driver execution UI: start → navigate → pickup → drop-off, one action per state.
+// Driver execution UI: start → pickup → transport → at destination → end, one action per state.
 // The backend also refuses a driver starting a ride not scheduled today.
 function isScheduledToday(iso: string, timeZone: string): boolean {
   const day = (value: Date) => new Intl.DateTimeFormat("en-CA", {

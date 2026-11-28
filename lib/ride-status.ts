@@ -11,7 +11,8 @@ export const RIDE_STATUS_META: Record<string, StatusMeta> = {
   assigned:  { label: "Assigned",  classes: "bg-info-bg text-info-fg border-info-fg/25", dot: "bg-info-fg" },
   en_route:     { label: "En route",     classes: "bg-route-bg text-route-fg border-route-fg/25", dot: "bg-route-fg" },
   at_pickup:    { label: "At pickup",    classes: "bg-aboard-bg text-aboard-fg border-aboard-fg/25", dot: "bg-aboard-fg" },
-  transporting: { label: "Transporting", classes: "bg-aboard-bg text-aboard-fg border-aboard-fg/25", dot: "bg-aboard-fg" },
+  transporting:  { label: "Transporting",  classes: "bg-aboard-bg text-aboard-fg border-aboard-fg/25", dot: "bg-aboard-fg" },
+  at_destination: { label: "At destination", classes: "bg-ok-bg text-ok-fg border-ok-fg/25", dot: "bg-ok-fg" },
   completed: { label: "Completed", classes: "bg-ok-bg text-ok-fg border-ok-fg/25", dot: "bg-ok-fg" },
   cancelled: { label: "Cancelled", classes: "bg-bad-bg text-bad-fg border-bad-fg/25", dot: "bg-bad-fg" },
 };
@@ -25,18 +26,20 @@ export function nextDriverActions(code: string): { to: string; label: string; pr
   switch (code) {
     case "assigned":     return [{ to: "en_route", label: "Start Ride", primary: true }];
     case "en_route":     return [{ to: "at_pickup", label: "At Pickup", primary: true }];
-    case "at_pickup":    return [{ to: "transporting", label: "Start Transporting", primary: true }];
-    case "transporting": return [{ to: "completed", label: "End Ride", primary: true }];
-    default:             return [];
+    case "at_pickup":     return [{ to: "transporting", label: "Start Transporting", primary: true }];
+    case "transporting":  return [{ to: "at_destination", label: "At Destination", primary: true }];
+    case "at_destination": return [{ to: "completed", label: "End Ride", primary: true }];
+    default:              return [];
   }
 }
 
 /** Previous step for the driver execution UI (Back button), or null when none. */
 export function previousDriverAction(code: string): { to: string; label: string } | null {
   switch (code) {
-    case "en_route":     return { to: "assigned", label: "Back" };
-    case "at_pickup":    return { to: "en_route", label: "Back" };
-    case "transporting": return { to: "at_pickup", label: "Back" };
-    default:             return null;
+    case "en_route":      return { to: "assigned", label: "Back" };
+    case "at_pickup":     return { to: "en_route", label: "Back" };
+    case "transporting":  return { to: "at_pickup", label: "Back" };
+    case "at_destination": return { to: "transporting", label: "Back" };
+    default:              return null;
   }
 }
